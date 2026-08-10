@@ -515,14 +515,29 @@ con `npm run font`, el hash cambia y hay que actualizar esa ruta.**
 
 ### Verificación post-deploy
 
+**1. Los headers.** Ojo con el nombre exacto: un typo hace que el navegador lo
+ignore como cualquier header desconocido, sin ningún error visible.
+
 ```bash
 curl -sI https://<tu-sitio>.onrender.com/opendyslexic-<hash>.woff2 \
-  | grep -i 'access-control\|cache-control'
+  | grep -i 'control-allow\|cache-control'
 ```
 
-Tiene que aparecer `access-control-allow-origin: *`. Si no está, el widget no se
+Tiene que decir `access-control-allow-origin: *`. Si no está, el widget no se
 rompe —aplica solo el espaciado y avisa por consola— pero se pierde media
 feature.
+
+**2. La prueba de origen cruzado.** `demo/produccion.html` carga el widget desde
+el CDN real en vez del build local. Servida desde `npm run dev`, el origen es
+`localhost` y el widget viene de `onrender.com`: es el único camino que ejercita
+CORS de verdad, y ninguna prueba con el bundle local puede reemplazarlo.
+
+```
+http://localhost:5180/demo/produccion.html
+```
+
+Si la fuente para dislexia cambia la tipografía de esa página, el deploy está
+bien.
 
 ---
 
@@ -586,6 +601,9 @@ Carga el widget de dos formas:
   reciben los clientes. Correr `npm run build` antes.
 - **`?strategy=transform`** — combinable con lo anterior; equivale a definir
   `data-scale-strategy="transform"` en el snippet del cliente.
+
+`demo/produccion.html` es aparte: carga el widget desde el CDN de producción,
+para verificar un deploy. Ver [Verificación post-deploy](#verificación-post-deploy).
 
 Siempre validar una feature en ambos modos antes de darla por terminada: el
 bundle de producción pasa por minificación y por el path de `document.currentScript`
