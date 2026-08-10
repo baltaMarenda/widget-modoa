@@ -1,0 +1,58 @@
+# Blueprint de Render. Publica dist/ como sitio estático detrás del CDN.
+#
+# El widget se sirve a sitios de terceros, así que lo que importa acá no es el
+# hosting en sí —son dos archivos estáticos— sino los headers.
+#
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: widget-modoa
+    runtime: static
+
+    # --include=dev es necesario: vite y typescript son devDependencies, y
+    # Render puede correr el install con NODE_ENV=production.
+    buildCommand: npm ci --include=dev && npm run build
+    staticPublishPath: ./dist
+
+    # Sin esto, cada push a main redeploya aunque no haya cambiado nada que
+    # afecte al bundle.
+    buildFilter:
+      paths:
+        - src/**
+        - package.json
+        - package-lock.json
+        - vite.config.ts
+        - tsconfig.json
+        - render.yaml
+
+    headers:
+      # --- CORS -------------------------------------------------------------
+      # Imprescindible para el .woff2 de la fuente para dislexia: las fuentes
+      # se piden SIEMPRE en modo CORS, incluso desde el mismo host que sirve el
+      # JS. Sin este header la fuente no carga en ningún sitio cliente.
+      #
+      # Va en /* y no solo en la fuente porque es un CDN público: cualquier
+      # sitio tiene que poder consumirlo. No hay nada privado que exponer.
+      - path: /*
+        name: Access-Control-Allow-Origin
+        value: "*"
+
+      # --- Caché ------------------------------------------------------------
+      # El bundle cambia de contenido sin cambiar de nombre, así que se revalida
+      # seguido: un cliente no debería quedarse semanas con una versión vieja.
+      - path: /widget.js
+        name: Cache-Control
+        value: public, max-age=300, must-revalidate
+
+      # La fuente lleva hash de contenido en el nombre: si cambia, cambia la
+      # URL. Se puede cachear para siempre.
+      - path: /*.woff2
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+
+      # --- Endurecimiento ---------------------------------------------------
+      # Evita que un navegador adivine el tipo de contenido de los assets.
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
