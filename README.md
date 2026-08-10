@@ -483,6 +483,49 @@ estrategia primaria solo escala el segundo, con `transform` escalan los dos.
 
 ---
 
+## Despliegue
+
+El widget son dos archivos estáticos. En Render va como **Static Site**, no como
+Web Service: los web services del plan gratuito se duermen a los 15 minutos sin
+tráfico y tardan ~30 s en despertar, lo que para un widget embebido en sitios de
+terceros significa que el botón no aparece.
+
+Hay un [`render.yaml`](render.yaml) con todo configurado (New → Blueprint). Si
+se crea el sitio a mano, la configuración es:
+
+- **Build Command:** `npm ci --include=dev && npm run build`
+  (`--include=dev` es necesario: vite y typescript son devDependencies y Render
+  puede correr el install con `NODE_ENV=production`)
+- **Publish Directory:** `dist`
+- **Headers:** hay que cargarlos a mano en Settings → Headers
+
+| Request Path | Header Name | Header Value |
+| --- | --- | --- |
+| `/*` | `Access-Control-Allow-Origin` | `*` |
+| `/*` | `X-Content-Type-Options` | `nosniff` |
+| `/widget.js` | `Cache-Control` | `public, max-age=300, must-revalidate` |
+| `/opendyslexic-<hash>.woff2` | `Cache-Control` | `public, max-age=31536000, immutable` |
+
+El primero es el que importa: sin él la fuente para dislexia no carga en ningún
+sitio cliente. Los demás son optimización.
+
+`widget.js` revalida seguido porque cambia de contenido sin cambiar de nombre;
+la fuente lleva hash y se puede cachear para siempre. **Si se regenera la fuente
+con `npm run font`, el hash cambia y hay que actualizar esa ruta.**
+
+### Verificación post-deploy
+
+```bash
+curl -sI https://<tu-sitio>.onrender.com/opendyslexic-<hash>.woff2 \
+  | grep -i 'access-control\|cache-control'
+```
+
+Tiene que aparecer `access-control-allow-origin: *`. Si no está, el widget no se
+rompe —aplica solo el espaciado y avisa por consola— pero se pierde media
+feature.
+
+---
+
 ## Desarrollo
 
 Requiere Node 20+.

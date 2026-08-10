@@ -47,7 +47,12 @@ services:
 
       # La fuente lleva hash de contenido en el nombre: si cambia, cambia la
       # URL. Se puede cachear para siempre.
-      - path: /*.woff2
+      #
+      # Se usa el nombre exacto y no un glob por extensión (`/*.woff2`) porque
+      # la documentación de Render solo describe comodines de segmento final
+      # tipo `/path/*`. OJO: si se regenera la fuente con `npm run font`, el
+      # hash cambia y hay que actualizar esta ruta.
+      - path: /opendyslexic-7705d3c4.woff2
         name: Cache-Control
         value: public, max-age=31536000, immutable
 
