@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Demo · Widget de accesibilidad Modoa</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #1a1d23;
+        --muted: #5c6673;
+        --line: #e2e6ec;
+        --paper: #ffffff;
+        --sand: #f6f7f9;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Georgia, 'Times New Roman', serif;
+        color: var(--ink);
+        background: var(--sand);
+        line-height: 1.65;
+      }
+      header {
+        background: linear-gradient(135deg, #123a8f, #7a1fa2 55%, #c2185b);
+        color: #fff;
+        padding: 56px 24px;
+      }
+      .wrap { max-width: 760px; margin: 0 auto; }
+      header h1 { margin: 0 0 8px; font-size: 2.2rem; line-height: 1.2; }
+      header p { margin: 0; opacity: 0.9; }
+      main { padding: 40px 24px 120px; }
+      section {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+      }
+      h2 { margin-top: 0; font-size: 1.5rem; }
+      h3 { font-size: 1.1rem; margin-bottom: 4px; }
+      p { margin: 0 0 14px; }
+      a { color: #1447c4; }
+      code, pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      pre {
+        background: #12151b;
+        color: #e8ecf3;
+        padding: 14px 16px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 0.85rem;
+        line-height: 1.5;
+      }
+
+      /* Paleta pensada para validar la daltonización: los pares
+         rojo/verde y azul/amarillo son los que colapsan en cada tipo. */
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 10px;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .swatches li {
+        border-radius: 8px;
+        padding: 14px 10px;
+        font-family: system-ui, sans-serif;
+        font-size: 0.78rem;
+        color: #fff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+      }
+
+      /* Pares de confusión: dos muestras pegadas, sin separación, para que la
+         diferencia (o su ausencia) se lea de un vistazo. */
+      .pares {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+      }
+      .pares li { display: flex; align-items: center; gap: 0; }
+      .pares span {
+        display: block;
+        width: 56px;
+        height: 44px;
+      }
+      .pares span:first-child { border-radius: 6px 0 0 6px; }
+      .pares span:nth-child(2) { border-radius: 0 6px 6px 0; }
+      .pares em {
+        font-family: system-ui, sans-serif;
+        font-size: 0.78rem;
+        font-style: normal;
+        color: var(--muted);
+        margin-left: 10px;
+      }
+      .rampa {
+        height: 46px;
+        border-radius: 8px;
+        background: linear-gradient(
+          90deg,
+          #ff0000, #ff8000, #ffff00, #80ff00, #00ff00,
+          #00ff80, #00ffff, #0080ff, #0000ff, #8000ff,
+          #ff00ff, #ff0080, #ff0000
+        );
+      }
+      .nota { font-size: 0.85rem; color: var(--muted); margin-top: 8px; }
+
+      table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+      th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; }
+      thead { background: var(--sand); }
+
+      .form-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+      label { display: block; font-size: 0.9rem; color: var(--muted); }
+      input, select, button {
+        font: inherit;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+      }
+      button { background: #1447c4; color: #fff; border-color: #1447c4; cursor: pointer; }
+
+      /* Muestra estática de OpenDyslexic para comparar sin togglear.
+         Solo funciona con el dev server, que sirve node_modules. */
+      @font-face {
+        font-family: 'OpenDyslexicRef';
+        font-style: normal;
+        font-weight: 400;
+        src: url('/node_modules/@fontsource/opendyslexic/files/opendyslexic-latin-400-normal.woff2')
+          format('woff2');
+      }
+      .comparador {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+        margin-bottom: 16px;
+      }
+      .comparador h3 { margin-top: 0; font-size: 0.95rem; color: var(--muted); }
+      .muestra {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--sand);
+      }
+      .muestra--od {
+        font-family: 'OpenDyslexicRef', sans-serif;
+        line-height: 1.5;
+        letter-spacing: 0.12em;
+        word-spacing: 0.16em;
+      }
+      .icono-de-prueba {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9rem;
+        padding: 10px 12px;
+        background: #fff8e1;
+        border: 1px dashed #f57c00;
+        border-radius: 6px;
+      }
+
+      blockquote {
+        margin: 0 0 16px;
+        padding: 12px 18px;
+        border-left: 4px solid #7a1fa2;
+        background: #faf7fd;
+        font-style: italic;
+      }
+      blockquote footer {
+        font-style: normal;
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      .lista-lectura { margin: 0 0 16px; padding-left: 22px; }
+      .lista-lectura li { margin-bottom: 6px; }
+
+      /* Bloque deliberadamente rígido: todo en px, nada relativo. */
+      .rigido {
+        width: 420px;
+        max-width: 100%;
+        padding: 16px;
+        border: 2px dashed #c2185b;
+        border-radius: 8px;
+        background: #fff5f8;
+        margin-bottom: 16px;
+      }
+      .rigido__t { font-size: 15px; margin: 0 0 6px; }
+      .rigido__p { font-size: 12px; line-height: 18px; margin: 0 0 10px; }
+      .rigido__b { font-size: 13px; padding: 6px 10px; }
+      .fluido { font-size: inherit; }
+
+      figure { margin: 0 0 16px; }
+      figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 6px; }
+      .photo {
+        height: 180px;
+        border-radius: 10px;
+        background:
+          radial-gradient(circle at 25% 30%, #ffd54f 0 18%, transparent 19%),
+          linear-gradient(180deg, #4fc3f7 0 55%, #2e7d32 55% 100%);
+      }
+      footer {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.9rem;
+        padding: 0 24px 60px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap">
+        <h1>Banco de pruebas del widget</h1>
+        <p>
+          Página de laboratorio con texto, color, imágenes y formularios para
+          validar cada feature sin tocar la landing real.
+        </p>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section aria-labelledby="s-texto">
+        <h2 id="s-texto">Texto corrido</h2>
+        <p>
+          El widget de accesibilidad se instala con una sola línea de código y no
+          requiere que el sitio anfitrión cambie nada más. Toda su interfaz vive
+          dentro de un <strong>Shadow DOM</strong>, de modo que ni los estilos de
+          esta página lo afectan a él, ni los suyos se filtran hacia acá.
+        </p>
+        <p>
+          Este párrafo largo existe para probar la lectura por voz: seleccioná
+          cualquier fragmento y debería aparecer un botón contextual para
+          escucharlo. También sirve para verificar que el aumento de tamaño de
+          página reflowea correctamente, sin cortar palabras ni generar scroll
+          horizontal. Podés combinarlo con la fuente para dislexia y comprobar
+          que la métrica más ancha de OpenDyslexic no rompe el layout.
+        </p>
+        <p>
+          Un <a href="#s-tabla">enlace interno</a>, un
+          <a href="https://example.com" rel="noreferrer">enlace externo</a> y
+          <code>algo de código en línea</code> para variar el ritmo visual.
+        </p>
+      </section>
+
+      <section aria-labelledby="s-dislexia">
+        <h2 id="s-dislexia">Fuente para dislexia</h2>
+        <p>
+          La columna izquierda usa la tipografía normal de esta demo. La derecha
+          es una muestra estática de referencia: carga OpenDyslexic desde
+          <code>node_modules</code> y aplica el mismo espaciado que la feature,
+          para poder comparar sin togglear. Al activar la feature en el menú,
+          <strong>toda</strong> la página debería quedar como la columna derecha.
+        </p>
+        <div class="comparador">
+          <div>
+            <h3>Tipografía normal</h3>
+            <p class="muestra">
+              Las letras que se parecen entre sí — la b y la d, la p y la q —
+              son las que más cuesta distinguir. OpenDyslexic les agrega peso
+              en la base, así cada una tiene una orientación inequívoca.
+            </p>
+          </div>
+          <div>
+            <h3>OpenDyslexic (referencia)</h3>
+            <p class="muestra muestra--od">
+              Las letras que se parecen entre sí — la b y la d, la p y la q —
+              son las que más cuesta distinguir. OpenDyslexic les agrega peso
+              en la base, así cada una tiene una orientación inequívoca.
+            </p>
+          </div>
+        </div>
+
+        <h3>Protección de fuentes de íconos</h3>
+        <p>
+          Este párrafo tiene la clase <code>icono-de-prueba</code>, que coincide
+          con las exclusiones del selector. Debe conservar su monoespaciada
+          incluso con la feature activa — es el mecanismo que evita convertir
+          los íconos de un sitio en cuadraditos vacíos.
+        </p>
+        <p class="icono-de-prueba">
+          MONOESPACIADA · si esto cambia de fuente, la exclusión falló.
+        </p>
+      </section>
+
+      <section aria-labelledby="s-lectura">
+        <h2 id="s-lectura">Texto para lectura por voz</h2>
+        <p>
+          Distintos contextos de markup para probar que la selección funciona
+          igual en todos. Activá “Lectura por voz” en el menú, seleccioná
+          cualquier fragmento y debería aparecer el botón flotante.
+        </p>
+
+        <h3>Párrafos largos</h3>
+        <p>
+          La accesibilidad web no es una capa que se agrega al final: es una
+          consecuencia de decisiones que se toman al principio. Un botón que no
+          es un botón, un contraste elegido por gusto, un formulario sin
+          etiquetas asociadas — cada uno de esos atajos se paga después, y lo
+          paga alguien que no estuvo en la reunión donde se tomó la decisión.
+        </p>
+        <p>
+          Este segundo párrafo existe para probar una selección que cruce el
+          límite entre dos bloques. Al arrastrar desde el párrafo anterior hasta
+          acá, la selección abarca dos nodos distintos y el rectángulo de anclaje
+          del botón debería quedar cerca de donde terminó el arrastre, no en el
+          medio geométrico de todo lo seleccionado.
+        </p>
+
+        <h3>Lista</h3>
+        <ul class="lista-lectura">
+          <li>Primer ítem, corto.</li>
+          <li>
+            Segundo ítem, bastante más largo, con una subordinada que lo estira
+            para que ocupe más de una línea y se pueda probar la selección
+            parcial dentro de un mismo elemento de lista.
+          </li>
+          <li>Tercer ítem con <strong>texto en negrita</strong> y un <a href="#s-lectura">enlace</a> adentro.</li>
+          <li>Cuarto ítem, para cerrar.</li>
+        </ul>
+
+        <h3>Cita</h3>
+        <blockquote>
+          <p>
+            El diseño accesible es diseño a secas. Cuando funciona, nadie lo
+            nota; cuando falla, excluye a alguien de forma perfectamente
+            silenciosa.
+          </p>
+          <footer>— Texto de ejemplo, sin atribución real</footer>
+        </blockquote>
+
+        <h3>Texto en otro idioma</h3>
+        <p lang="en">
+          This paragraph is marked up with <code>lang="en"</code>. The widget
+          resolves the speech language from the document, so reading this one
+          uses whatever the host document declares unless the client overrides
+          it with <code>data-speech-lang</code>.
+        </p>
+      </section>
+
+      <section aria-labelledby="s-rigido">
+        <h2 id="s-rigido">Sitio “mal comportado” (px fijos)</h2>
+        <p>
+          Este bloque imita un sitio hecho todo en píxeles: ancho fijo, alto
+          fijo y <code>font-size</code> en px. Escalar el
+          <code>font-size</code> del <code>&lt;html&gt;</code> no lo mueve ni un
+          pixel — es el caso que justifica la estrategia de fallback con
+          <code>transform: scale()</code>.
+        </p>
+        <div class="rigido">
+          <h3 class="rigido__t">Tarjeta de 420 px</h3>
+          <p class="rigido__p">
+            Todo acá está en px: el ancho del contenedor, el tamaño de fuente y
+            el alto de la caja. Con la estrategia <code>font-size</code> este
+            texto no cambia; con <code>transform</code> sí.
+          </p>
+          <button class="rigido__b" type="button">Botón de 13 px</button>
+        </div>
+        <p class="fluido">
+          Este párrafo, en cambio, no declara <code>font-size</code>: hereda del
+          <code>&lt;html&gt;</code> y por lo tanto sí escala con la estrategia
+          primaria. Compará los dos mientras subís el tamaño.
+        </p>
+      </section>
+
+      <section aria-labelledby="s-color">
+        <h2 id="s-color">Paleta de color</h2>
+        <p>
+          Los pares críticos: rojo/verde para protanopía y deuteranopía,
+          azul/amarillo para tritanopía.
+        </p>
+        <ul class="swatches">
+          <li style="background: #d32f2f">Rojo · #D32F2F</li>
+          <li style="background: #2e7d32">Verde · #2E7D32</li>
+          <li style="background: #f57c00">Naranja · #F57C00</li>
+          <li style="background: #fbc02d; color: #222; text-shadow: none">
+            Amarillo · #FBC02D
+          </li>
+          <li style="background: #1565c0">Azul · #1565C0</li>
+          <li style="background: #6a1b9a">Violeta · #6A1B9A</li>
+          <li style="background: #00838f">Cian · #00838F</li>
+          <li style="background: #4e342e">Marrón · #4E342E</li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="s-confusion">
+        <h2 id="s-confusion">Pares de confusión</h2>
+        <p>
+          Cada par colapsa en un mismo tono para un tipo de dicromacia. Con el
+          filtro correspondiente activo, los dos lados deberían separarse
+          claramente.
+        </p>
+
+        <h3>Protanopía y deuteranopía · eje rojo–verde</h3>
+        <ul class="pares">
+          <li>
+            <span style="background: #d32f2f"></span>
+            <span style="background: #2e7d32"></span>
+            <em>Rojo / Verde</em>
+          </li>
+          <li>
+            <span style="background: #8b1a1a"></span>
+            <span style="background: #5a6b1f"></span>
+            <em>Bordó / Oliva</em>
+          </li>
+          <li>
+            <span style="background: #e67e22"></span>
+            <span style="background: #7cb342"></span>
+            <em>Naranja / Lima</em>
+          </li>
+          <li>
+            <span style="background: #6a1b9a"></span>
+            <span style="background: #1565c0"></span>
+            <em>Violeta / Azul</em>
+          </li>
+        </ul>
+
+        <h3>Tritanopía · eje azul–amarillo</h3>
+        <ul class="pares">
+          <li>
+            <span style="background: #1565c0"></span>
+            <span style="background: #00838f"></span>
+            <em>Azul / Cian</em>
+          </li>
+          <li>
+            <span style="background: #fbc02d"></span>
+            <span style="background: #f8bbd0"></span>
+            <em>Amarillo / Rosa</em>
+          </li>
+          <li>
+            <span style="background: #7cb342"></span>
+            <span style="background: #00838f"></span>
+            <em>Lima / Petróleo</em>
+          </li>
+          <li>
+            <span style="background: #6a1b9a"></span>
+            <span style="background: #b71c1c"></span>
+            <em>Violeta / Rojo</em>
+          </li>
+        </ul>
+
+        <h3>Rampa continua de tono</h3>
+        <div class="rampa" role="img" aria-label="Rampa continua del espectro de tonos"></div>
+        <p class="nota">
+          Sirve para ver cómo cada filtro reasigna el espectro completo. En
+          acromatopsia debería quedar un degradé de grises con contraste
+          desparejo: los amarillos claros, los azules oscuros.
+        </p>
+      </section>
+
+      <section aria-labelledby="s-img">
+        <h2 id="s-img">Imágenes y gráficos</h2>
+        <figure>
+          <div class="photo" role="img" aria-label="Paisaje sintético: sol amarillo sobre cielo celeste y campo verde"></div>
+          <figcaption>Imagen simulada con gradientes CSS.</figcaption>
+        </figure>
+        <figure>
+          <svg viewBox="0 0 320 120" width="100%" height="120" role="img" aria-label="Gráfico de barras de ejemplo con cinco series de colores">
+            <rect x="10" y="30" width="44" height="80" fill="#d32f2f" />
+            <rect x="70" y="55" width="44" height="55" fill="#2e7d32" />
+            <rect x="130" y="15" width="44" height="95" fill="#1565c0" />
+            <rect x="190" y="70" width="44" height="40" fill="#f57c00" />
+            <rect x="250" y="45" width="44" height="65" fill="#6a1b9a" />
+            <line x1="0" y1="110" x2="320" y2="110" stroke="#1a1d23" stroke-width="2" />
+          </svg>
+          <figcaption>SVG inline: útil para ver el filtro aplicado a vectores.</figcaption>
+        </figure>
+      </section>
+
+      <section aria-labelledby="s-tabla">
+        <h2 id="s-tabla">Tabla</h2>
+        <table>
+          <thead>
+            <tr><th>Feature</th><th>Estado</th><th>Alcance</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Botón flotante + menú</td><td>Listo</td><td>Shadow DOM</td></tr>
+            <tr><td>Daltonización</td><td>Pendiente</td><td>Documento host</td></tr>
+            <tr><td>Tamaño de página</td><td>Pendiente</td><td>Documento host</td></tr>
+            <tr><td>Lectura por voz</td><td>Pendiente</td><td>Selección</td></tr>
+            <tr><td>Fuente dislexia</td><td>Pendiente</td><td>Documento host</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section aria-labelledby="s-form">
+        <h2 id="s-form">Formulario</h2>
+        <p>Para comprobar que el focus trap del menú no roba el foco de la página.</p>
+        <div class="form-row">
+          <div>
+            <label for="nombre">Nombre</label>
+            <input id="nombre" type="text" placeholder="Tu nombre" />
+          </div>
+          <div>
+            <label for="plan">Plan</label>
+            <select id="plan">
+              <option>Básico</option>
+              <option>Pro</option>
+            </select>
+          </div>
+          <button type="button">Enviar</button>
+        </div>
+      </section>
+
+      <section aria-labelledby="s-snippet">
+        <h2 id="s-snippet">Snippet de instalación</h2>
+        <p>Lo que se le entrega al cliente:</p>
+<pre><code>&lt;script
+  src="https://cdn.tu-dominio.com/widget.js"
+  data-client-id="acme-sa"
+  data-lang="es"
+  data-position="bottom-right"
+  defer&gt;&lt;/script&gt;</code></pre>
+      </section>
+    </main>
+
+    <footer class="wrap">
+      Modo dev (fuente TypeScript). Para probar el bundle compilado:
+      <code>npm run build</code> y abrí
+      <a href="?dist">esta misma página con <code>?dist</code></a>.
+    </footer>
+
+    <script>
+      // Carga el widget. Por defecto usa la fuente TS (dev server);
+      // con ?dist en la URL carga el bundle IIFE real de /dist/widget.js.
+      (function () {
+        var params = new URLSearchParams(location.search);
+        var useDist = params.has('dist');
+        var s = document.createElement('script');
+        // Cache-buster en el bundle: sin esto el navegador sirve el
+        // /dist/widget.js viejo después de un `npm run build` y se depura una
+        // versión que ya no existe.
+        s.src = useDist ? '/dist/widget.js?t=' + Date.now() : '/src/main.ts';
+        if (!useDist) s.type = 'module';
+        s.defer = true;
+        s.setAttribute('data-client-id', 'demo-modoa');
+        s.setAttribute('data-lang', 'es');
+        s.setAttribute('data-position', 'bottom-right');
+        // ?strategy=transform prueba el fallback de escalado. Es el mismo
+        // switch que se define por sitio cliente con data-scale-strategy.
+        s.setAttribute(
+          'data-scale-strategy',
+          params.get('strategy') === 'transform' ? 'transform' : 'font-size',
+        );
+        // En modo dev el script es /src/main.ts, así que la base deducida
+        // apuntaría a /src/. Los assets del build siempre están en /dist/.
+        s.setAttribute('data-asset-base', '/dist/');
+        document.head.appendChild(s);
+      })();
+    </script>
+  </body>
+</html>

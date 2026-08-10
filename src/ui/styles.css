@@ -1,0 +1,421 @@
+/*
+ * Estilos del Shadow DOM del widget.
+ *
+ * Reglas de la casa:
+ * - Todas las medidas en px, nunca rem/em. La feature de "aumentar tamaño"
+ *   escala el font-size del <html> del sitio host; si usáramos rem, la UI del
+ *   propio widget escalaría con ella y se rompería.
+ * - Nada hereda del host: `.root` fija explícitamente cada propiedad heredable.
+ */
+
+:host {
+  --m-bg: #ffffff;
+  --m-fg: #14161a;
+  --m-muted: #5b6472;
+  --m-border: #d8dde5;
+  --m-accent: #1c4ed8;
+  --m-accent-fg: #ffffff;
+  --m-focus: #0b57d0;
+  --m-shadow: 0 10px 32px rgba(10, 14, 22, 0.22);
+  --m-gap: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    --m-bg: #16181d;
+    --m-fg: #f2f4f7;
+    --m-muted: #a3adbb;
+    --m-border: #333944;
+    --m-accent: #6f9bff;
+    --m-accent-fg: #0b1020;
+    --m-focus: #9dbcff;
+    --m-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.root {
+  /* Corta cualquier herencia del documento host. */
+  all: initial;
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1.45;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-transform: none;
+  text-align: start;
+  color: var(--m-fg);
+
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  pointer-events: none;
+}
+
+:host([data-position='bottom-right']) .root {
+  bottom: var(--m-gap);
+  right: var(--m-gap);
+  align-items: flex-end;
+  flex-direction: column;
+}
+:host([data-position='bottom-left']) .root {
+  bottom: var(--m-gap);
+  left: var(--m-gap);
+  align-items: flex-start;
+  flex-direction: column;
+}
+:host([data-position='top-right']) .root {
+  top: var(--m-gap);
+  right: var(--m-gap);
+  align-items: flex-end;
+  flex-direction: column-reverse;
+}
+:host([data-position='top-left']) .root {
+  top: var(--m-gap);
+  left: var(--m-gap);
+  align-items: flex-start;
+  flex-direction: column-reverse;
+}
+
+/* ---------------------------------------------------------------- botón --- */
+
+/*
+ * El logo es arte de marca de dos colores pensado para fondo claro, así que el
+ * botón le pone una base blanca fija en vez de seguir el tema: en modo oscuro
+ * el navy del logo sobre fondo oscuro sería ilegible. El borde evita que el
+ * círculo blanco desaparezca en un sitio host de fondo blanco.
+ */
+.fab {
+  pointer-events: auto;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 1px solid rgba(18, 35, 63, 0.14);
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: var(--m-shadow);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.fab:hover {
+  transform: scale(1.06);
+}
+
+.fab:active {
+  transform: scale(0.97);
+}
+
+.fab svg {
+  /* Alto relativo al botón, ancho automático: el logo no es cuadrado
+     (320x353) y deformarlo se nota. */
+  height: 72%;
+  width: auto;
+  display: block;
+  /* Los colores son de marca: no los reasigna el modo de alto contraste. */
+  forced-color-adjust: none;
+}
+
+/* ----------------------------------------------------------------- panel -- */
+
+.panel {
+  pointer-events: auto;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  /* Deja lugar al botón (72px) más los márgenes de arriba y abajo. */
+  max-height: calc(100vh - 128px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--m-bg);
+  color: var(--m-fg);
+  border: 1px solid var(--m-border);
+  border-radius: 14px;
+  box-shadow: var(--m-shadow);
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 12px 14px 16px;
+  border-bottom: 1px solid var(--m-border);
+}
+
+.panel__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.panel__close {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--m-muted);
+  cursor: pointer;
+}
+
+.panel__close:hover {
+  background: rgba(127, 127, 127, 0.16);
+  color: var(--m-fg);
+}
+
+.panel__close svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.panel__body {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ------------------------------------------------- bloque de una feature -- */
+
+.feat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.feat + .feat {
+  border-top: 1px solid var(--m-border);
+  border-radius: 0 0 10px 10px;
+}
+
+.feat__label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--m-muted);
+}
+
+.feat__options {
+  display: flex;
+  gap: 6px;
+}
+
+/* Para listas de opciones con etiquetas largas, que no entran en una fila. */
+.feat__options--grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.opt--wide {
+  grid-column: 1 / -1;
+}
+
+.opt {
+  flex: 1 1 0;
+  appearance: none;
+  min-height: 40px;
+  padding: 8px 6px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--m-fg);
+  background: transparent;
+  border: 1px solid var(--m-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.opt:hover {
+  border-color: var(--m-accent);
+}
+
+.opt[aria-checked='true'] {
+  background: var(--m-accent);
+  border-color: var(--m-accent);
+  color: var(--m-accent-fg);
+  font-weight: 600;
+}
+
+.opt:focus-visible {
+  outline: 3px solid var(--m-focus);
+  outline-offset: 2px;
+}
+
+/* Bloque de acción: sin etiqueta ni grupo, solo el botón. */
+.feat--action {
+  padding-top: 4px;
+}
+
+.opt--reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  color: var(--m-muted);
+}
+
+.opt--reset:hover {
+  border-color: var(--m-fg);
+  color: var(--m-fg);
+}
+
+.opt__icon {
+  display: inline-flex;
+}
+
+.opt--reset svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+  fill: currentColor;
+}
+
+.feat__hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--m-muted);
+}
+
+/* -------------------------------------------- botón contextual de lectura -- */
+
+/*
+ * Hermano de `.root`, no descendiente: se posiciona con coordenadas de
+ * viewport que vienen de getBoundingClientRect(). El host es
+ * `position: fixed; inset: 0`, así que su origen coincide con el del viewport
+ * y las coordenadas se usan tal cual.
+ */
+.tts-bubble {
+  all: initial;
+  box-sizing: border-box;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px 8px 10px;
+  pointer-events: auto;
+  cursor: pointer;
+
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--m-accent-fg);
+  background: var(--m-accent);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  box-shadow: var(--m-shadow);
+}
+
+.tts-bubble[hidden] {
+  display: none;
+}
+
+.tts-bubble__icon {
+  display: inline-flex;
+}
+
+.tts-bubble svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: currentColor;
+}
+
+.tts-bubble:focus-visible {
+  outline: 3px solid var(--m-focus);
+  outline-offset: 2px;
+}
+
+.panel__empty {
+  margin: 0;
+  padding: 20px 12px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--m-muted);
+}
+
+/* ------------------------------------------------------------ foco / a11y - */
+
+.fab:focus-visible,
+.panel__close:focus-visible,
+.panel:focus-visible {
+  outline: 3px solid var(--m-focus);
+  outline-offset: 2px;
+}
+
+/* El panel recibe foco programático al abrirse; no dibujamos anillo por eso. */
+.panel:focus:not(:focus-visible) {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fab {
+    transition: none;
+  }
+  .fab:hover,
+  .fab:active {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .fab,
+  .panel {
+    border: 1px solid CanvasText;
+  }
+  /* En alto contraste el color de fondo se descarta: el estado seleccionado
+     tiene que sobrevivir igual. */
+  .opt[aria-checked='true'] {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+  .tts-bubble {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+}
