@@ -19,6 +19,10 @@ export function createResetFeature(): Feature {
     render(ctx: FeatureContext) {
       const group = document.createElement('div');
       group.className = 'feat feat--action';
+      // El panel es un `role="menu"` y su `role="menuitem"` tiene que colgar
+      // directo de él: `role="none"` saca este <div> del árbol de
+      // accesibilidad y deja al botón como hijo del menú.
+      group.setAttribute('role', 'none');
 
       const button = document.createElement('button');
       button.type = 'button';

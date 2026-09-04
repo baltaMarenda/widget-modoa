@@ -35,6 +35,34 @@ function safeRemove(key: string): void {
 }
 
 /**
+ * Valores admitidos de cada clave enumerada.
+ *
+ * Está declarado como tabla y no como una tanda de `if` para que agregar una
+ * feature con estado enumerado sea agregar una línea acá: olvidarse de validar
+ * un enumerado nuevo es silencioso —el valor basura llega hasta el CSS— y una
+ * tabla lo hace evidente.
+ *
+ * Los booleanos y `tts` no figuran: alcanza con la comprobación de tipo.
+ */
+const VALID_VALUES: {
+  [K in keyof WidgetState]?: readonly WidgetState[K][];
+} = {
+  colorblind: [
+    'none',
+    'protanopia',
+    'deuteranopia',
+    'tritanopia',
+    'achromatopsia',
+  ],
+  fontSizeStep: [0, 1, 2, 3],
+  contrast: ['off', 'invert', 'dark', 'light'],
+  textSpacing: ['off', 'light', 'moderate', 'heavy'],
+  lineSpacing: ['off', '1.5', '1.75', '2'],
+  textAlign: ['off', 'left', 'right', 'center'],
+  saturation: ['off', 'low', 'high', 'none'],
+};
+
+/**
  * Descarta claves desconocidas y valores del tipo equivocado, y acota los
  * enumerados. localStorage es editable por el usuario y por cualquier script
  * del sitio host: nada de lo que salga de ahí se asume válido.
@@ -46,31 +74,16 @@ function sanitize(raw: unknown): WidgetState {
 
   for (const key of Object.keys(DEFAULT_STATE) as (keyof WidgetState)[]) {
     const value = input[key];
-    if (typeof value === typeof DEFAULT_STATE[key]) {
-      (out as Record<string, unknown>)[key] = value;
-    }
+    if (typeof value !== typeof DEFAULT_STATE[key]) continue;
+
+    const allowed = VALID_VALUES[key] as readonly unknown[] | undefined;
+    if (allowed && !allowed.includes(value)) continue;
+
+    (out as Record<string, unknown>)[key] = value;
   }
 
-  if (!VALID_COLORBLIND.includes(out.colorblind)) {
-    out.colorblind = DEFAULT_STATE.colorblind;
-  }
-  if (!VALID_FONT_SIZE_STEPS.includes(out.fontSizeStep)) {
-    out.fontSizeStep = DEFAULT_STATE.fontSizeStep;
-  }
   return out;
 }
-
-const VALID_COLORBLIND: readonly WidgetState['colorblind'][] = [
-  'none',
-  'protanopia',
-  'deuteranopia',
-  'tritanopia',
-  'achromatopsia',
-];
-
-const VALID_FONT_SIZE_STEPS: readonly WidgetState['fontSizeStep'][] = [
-  0, 1, 2, 3,
-];
 
 export function loadState(clientId: string): WidgetState {
   const raw = safeGet(storageKey(clientId));
