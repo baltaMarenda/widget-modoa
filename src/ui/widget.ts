@@ -1,5 +1,6 @@
 import type { FeatureContext } from '../core/types';
 import { features } from '../features';
+import { createAnnouncer, destroyAnnouncer } from './announcer';
 import { createFocusTrap } from './focus-trap';
 import { ICON_CLOSE } from './icons';
 import { LOGO_MODOA } from './logo';
@@ -80,6 +81,10 @@ export function createWidgetUI(ctx: FeatureContext): WidgetUI {
   root.append(panel, fab);
   shadow.appendChild(root);
 
+  // Se crea junto con el panel y no en el primer anuncio: una región viva que
+  // nace y se llena en el mismo tick no la anuncia nadie. Ver ui/announcer.ts.
+  createAnnouncer(shadow);
+
   // ----------------------------------------------------------- interacción
   const trap = createFocusTrap(panel);
   let isOpen = false;
@@ -145,6 +150,7 @@ export function createWidgetUI(ctx: FeatureContext): WidgetUI {
     destroy() {
       close();
       root.removeEventListener('keydown', onRootKeydown);
+      destroyAnnouncer();
       root.remove();
     },
   };

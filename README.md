@@ -58,14 +58,205 @@ usar client-ids distintos evita que se pisen las preferencias.
 
 ## Features
 
-| Feature                     | Alcance          | Estado     |
-| --------------------------- | ---------------- | ---------- |
-| Botón flotante + menú       | Shadow DOM       | ✅ Listo   |
-| Aumento de tamaño de página | Documento host   | ✅ Listo   |
-| Daltonización (Machado)     | Documento host   | ✅ Listo   |
-| Lectura por voz (TTS)       | Selección        | ✅ Listo   |
-| Fuente para dislexia        | Documento host   | ✅ Listo   |
-| Reset de preferencias       | —                | ✅ Listo   |
+| Feature                     | Alcance        | Control  | Estado   |
+| --------------------------- | -------------- | -------- | -------- |
+| Botón flotante + menú       | Shadow DOM     | —        | ✅ Listo |
+| Aumento de tamaño de página | Documento host | Opciones | ✅ Listo |
+| Espaciado de líneas         | Documento host | Cíclico  | ✅ Listo |
+| Espaciado de texto          | Documento host | Cíclico  | ✅ Listo |
+| Alineación                  | Documento host | Cíclico  | ✅ Listo |
+| Foco (máscara de lectura)   | Shadow DOM     | Cíclico  | ✅ Listo |
+| Fuente para dislexia        | Documento host | Opciones | ✅ Listo |
+| Contraste                   | Documento host | Cíclico  | ✅ Listo |
+| Saturación                  | Documento host | Cíclico  | ✅ Listo |
+| Daltonización (Machado)     | Documento host | Opciones | ✅ Listo |
+| Lectura por voz (TTS)       | Selección      | —        | ✅ Listo |
+| Reset de preferencias       | —              | —        | ✅ Listo |
+
+**Control cíclico** = un solo botón que rota entre sus estados en cada
+pulsación, y vuelve siempre a "apagado" al cerrar la vuelta. Ocupa media
+columna de la grilla del panel, contra la fila entera que necesita un grupo con
+todas las opciones a la vista. Es lo que permite tener doce features sin que el
+menú sea una lista interminable.
+
+El costo de ese ahorro es real y se paga en dos lugares:
+
+- No se puede saltar directo a un estado. Se acota con ciclos cortos (cuatro
+  estados como máximo, contando el apagado) y cerrando siempre en "apagado":
+  nunca hay que dar la vuelta entera para desactivar.
+- El nombre accesible del botón cambia al presionarlo y ningún lector de
+  pantalla lo relee por eso solo. Por eso el panel tiene una región viva
+  (`role="status"`, `aria-live="polite"`, en `ui/announcer.ts`) que anuncia cada
+  cambio — WCAG 2.1 SC 4.1.3 "Status Messages".
+
+Y el estado actual va siempre escrito con todas las letras debajo del nombre de
+la feature, no solo marcado con el color de fondo: SC 1.4.1 "Use of Color".
+
+---
+
+## Los tres controles de color, y por qué comparten un módulo
+
+Contraste (en modo invertido), saturación y daltonización quieren pintar el
+mismo `<body>` con `filter`. `filter` es **una sola propiedad**: la última que
+escriba gana y borra a las otras. Elegir dos de las tres tiene que funcionar, y
+sin coordinación no funciona.
+
+`core/host-filter.ts` es el único dueño de esa propiedad. Cada feature registra
+su capa y el módulo compone la cadena en un orden fijo, que no es cosmético
+porque los filtros se aplican en secuencia sobre el resultado del anterior:
+
+```
+saturate(0.5) url(#modoa-filter-deuteranopia) invert(1) hue-rotate(180deg)
+└─ saturación ─┘└──── daltonización ─────────┘└──────── contraste ────────┘
+```
+
+1. **Saturación** primero, sobre los colores originales del sitio.
+2. **Daltonización** después: la simulación tiene que correr sobre lo que la
+   persona realmente va a ver, no sobre colores que después se modifican.
+3. **Contraste** (la inversión) al final, sobre la imagen ya compuesta.
+
+El `<body>` queda con un `data-modoa-filter` que lista las capas activas en ese
+mismo orden, para poder verificarlo de un vistazo en QA.
+
+### Por qué la saturación no rompe el contraste
+
+La matriz de `saturate()` está construida sobre los coeficientes de luminancia
+(0.213 R, 0.715 G, 0.072 B) — los mismos que usa la fórmula de relación de
+contraste de WCAG. Mueve el croma dejando la luminancia donde estaba, así que un
+par texto/fondo que cumplía SC 1.4.3 lo sigue cumpliendo en los tres niveles.
+
+`high` se queda en `1.75` por otro motivo: más arriba los colores empiezan a
+recortarse contra los límites de sRGB y dos tonos distintos pueden terminar en
+el mismo color saturado. Se perdería información en lugar de resaltarla.
+
+### Los tres modos de contraste
+
+**Invertido** no es `invert(1)` a secas. Invertir y nada más da vuelta también
+el tono: el cielo azul sale naranja y la piel, celeste. `hue-rotate(180deg)`
+devuelve cada tono a su lugar y deja solo la vuelta de luminosidad. La relación
+de contraste sobrevive intacta —invertir es simétrico respecto de la fórmula de
+WCAG— así que un par que cumplía 4.5:1 lo sigue cumpliendo.
+
+Las imágenes, videos e `<iframe>` se invierten de vuelta con una regla propia:
+el `filter` de un descendiente se compone sobre el del ancestro y las dos
+inversiones se cancelan.
+
+**Oscuro** y **claro** son CSS puro, sin filtro. Los colores no son de gusto:
+son los pares con más relación de contraste que se pueden armar manteniendo los
+enlaces distinguibles del texto corrido.
+
+| Modo   | Texto             | Enlace            | Visitado          |
+| ------ | ----------------- | ----------------- | ----------------- |
+| Oscuro | `#ffffff` — 21:1  | `#ffff00` — 19.6:1| `#66ccff` — 11.6:1|
+| Claro  | `#000000` — 21:1  | `#0000cc` — 11.2:1| `#6b00a8` — 9.6:1 |
+
+Los dos pisan `background-image` además del color de fondo. No es una decisión
+cómoda —se lleva puestos degradados y sprites CSS— pero es necesaria: una foto
+de fondo que sobreviva deja el texto forzado sobre un fondo que no se eligió, y
+ahí los números de esa tabla no significan nada. Las imágenes de **contenido**
+(`<img>`, `<video>`) no se tocan: son información, no decoración.
+
+Además redibujan el anillo de foco con el color de enlace (SC 2.4.7: el anillo
+del sitio puede haber quedado del mismo color que el fondo forzado) y le ponen
+borde explícito a los controles de formulario, que si no se funden con el fondo.
+
+---
+
+## La hoja de estilos compartida, y por qué el orden importa
+
+Cuatro features escriben CSS sobre el sitio host y varias pisan las **mismas
+propiedades**: la fuente para dislexia fija `line-height`, `letter-spacing` y
+`word-spacing`; el espaciado de texto fija los dos últimos; el espaciado de
+líneas fija el primero. Todas usan `!important` sobre selectores de
+especificidad parecida, así que quién gana lo decide el orden en la hoja.
+
+Con un `<style>` por feature ese orden sería el **orden de activación**: prender
+dislexia después del espaciado de líneas daría un resultado distinto que al
+revés. Por eso hay una sola hoja (`core/host-css.ts`, un `<style>` con id
+`modoa-host-style`) y las secciones se escriben siempre en el mismo orden, sin
+importar cuándo se activó cada una:
+
+```
+contrast · text-align · dyslexia · text-spacing · line-spacing
+                        └── menor prioridad ────── mayor ────┘
+```
+
+La regla detrás de ese orden es "lo explícito le gana a lo que vino de
+arrastre". El espaciado de la fuente para dislexia viene incluido en el paquete
+de la fuente, no lo pidió nadie; si además se usa uno de los dos controles
+dedicados a espaciado, gana el control. En la práctica: con dislexia + líneas 2x
++ espaciado pesado, el texto queda en OpenDyslexic con `line-height: 2` y
+`letter-spacing: 0.2em`, no con el 1.5 / 0.12em de la fuente.
+
+Cuando no queda ninguna sección activa el `<style>` se saca del documento: el
+teardown tiene que devolver el DOM del host exactamente como estaba.
+
+### Valores de espaciado de texto
+
+`moderate` es exactamente lo que pide **WCAG 2.1 SC 1.4.12 "Text Spacing"**
+(nivel AA). Tomarlo como escalón del medio tiene una ventaja concreta sobre
+elegir valores a ojo: es lo que un sitio bien hecho ya está obligado a soportar
+sin perder contenido ni funcionalidad.
+
+| Nivel      | Interletrado | Interpalabra | Entre párrafos |
+| ---------- | ------------ | ------------ | -------------- |
+| `light`    | 0.06em       | 0.10em       | 1.5em          |
+| `moderate` | **0.12em**   | **0.16em**   | **2em**        |
+| `heavy`    | 0.20em       | 0.30em       | 2.5em          |
+
+El interlineado no está en esa tabla aunque el criterio también lo cubra: tiene
+su propio control, con el piso en el 1.5 que pide el mismo SC. Repetirlo en los
+dos sería dejar dos botones peleando por la misma propiedad.
+
+Las tres features tipográficas comparten las exclusiones de fuentes de ícono de
+`core/text-css.ts` — ver [El selector, y por qué no es `*` a secas](#el-selector-y-por-qué-no-es--a-secas).
+
+---
+
+## Foco: la máscara de lectura
+
+Oscurece la página salvo una banda a la altura del cursor, para sostener la
+atención en el renglón que se está leyendo.
+
+La banda mide el 12 % del viewport —unas cuatro líneas de texto corrido en una
+pantalla de escritorio— acotada a [64, 128] px. El techo importa tanto como la
+proporción: una banda que abarque medio viewport deja de aislar nada, porque la
+vista se vuelve a dispersar dentro de la propia banda. Vive en el **mismo
+Shadow DOM** que el panel, como hermana de `.root` — igual que la burbuja de
+lectura por voz. El host es `position: fixed; inset: 0`, así que su origen
+coincide con el del viewport y las coordenadas de `clientY` se usan tal cual, sin
+compensar scroll. Estar en el shadow también la deja fuera del alcance de los
+filtros que el widget aplica al `<body>`: la máscara no se invierte junto con la
+página.
+
+La banda va enmarcada con los dos colores del logo —celeste `#4a90d2` arriba,
+navy `#12233f` abajo— declarados como `--m-brand-celeste` y `--m-brand-navy` en
+`ui/styles.css`. Son los únicos tokens que **no** se redefinen en el bloque de
+tema oscuro: son identidad, no paleta de interfaz.
+
+Los bordes se dibujan hacia adentro de cada panel oscuro, no hacia la banda, y
+por eso `.mask` lleva `box-sizing: border-box`. El JS le escribe a `.mask--top`
+un `height` exacto; con `content-box` el borde se sumaría por fuera de esa
+medida, el panel terminaría 6 px más abajo y la banda quedaría corrida y más
+angosta que lo calculado.
+
+Tres cosas que no son negociables en esta feature:
+
+- **`pointer-events: none`.** Sin eso la máscara es un panel que se come todos
+  los clicks de la página.
+- **Sigue también al foco del teclado** (`focusin`, en captura). Sin eso la
+  feature es inservible sin mouse: quien navega con Tab dejaría la banda clavada
+  mientras el foco se mueve por debajo de la parte oscurecida. Se ignora el foco
+  que entra al propio widget, porque los eventos que salen del Shadow DOM se
+  re-apuntan al elemento host, que ocupa el viewport entero.
+- **`requestAnimationFrame` para reposicionar.** `pointermove` dispara decenas
+  de veces por segundo; agrupando en un frame se pinta como mucho una vez por
+  refresco de pantalla.
+
+En el modo de alto contraste del sistema lleva `forced-color-adjust: none`: sin
+eso el fondo semitransparente se descarta y se pinta un bloque opaco, que taparía
+la página en vez de atenuarla. De paso preserva los colores de marca de los
+bordes, mismo criterio que el logo del botón.
 
 ---
 
@@ -105,23 +296,25 @@ nodos en su DOM.
 
 ### Verificación
 
-Con las cuatro features activas a la vez (150 % con estrategia `transform` +
-deuteranopía + fuente dislexia + una lectura por voz sonando), se aprieta
-reset y se compara el DOM del host campo por campo contra una firma tomada
-antes de activar nada: **cero diferencias**.
+Con **todas** las features activas a la vez (150 % con estrategia `transform` +
+deuteranopía + fuente dislexia + los seis controles cíclicos en su primer
+estado + una lectura por voz sonando), se aprieta reset y se compara el DOM del
+host campo por campo contra una firma tomada antes de activar nada: **cero
+diferencias**.
 
 | | Activado | Tras reset |
 | --- | --- | --- |
 | Secciones / párrafos / ítems | 10 / 21 / 20 | 10 / 21 / 20 |
 | `#modoa-colorblind-filters` | 1 (con 4 `<filter>`) | 0 |
 | `#modoa-scale-wrapper` | 1 | 0 |
-| `#modoa-dyslexia-style` | 1 | 0 |
+| `#modoa-host-style` | 1 (con 5 secciones) | 0 |
 | `FontFace` registradas | 1 | 0 |
-| Atributos en `<html>` | `lang`, `data-modoa-dyslexia` | `lang` |
-| Atributos en `<body>` | `data-modoa-colorblind`, `data-modoa-scale`, `style` | ninguno |
+| Atributos en `<html>` | `lang` + `data-modoa-`: `contrast`, `dyslexia`, `line-spacing`, `text-align`, `text-spacing` | `lang` |
+| Atributos en `<body>` | `data-modoa-colorblind`, `data-modoa-filter`, `data-modoa-scale`, `style` | ninguno |
+| Paneles de la máscara en el shadow | 2 | 0 |
 | `speechSynthesis` | hablando | detenido |
 | localStorage | con datos | `null` |
-| Opciones marcadas en el panel | 3, 1, 2, 1 | 0, 0, 0, 0 |
+| Controles cíclicos activos | 6 | 0 |
 
 El atributo `style` vacío que quedaba en el `<body>` era residuo real:
 `style.removeProperty()` deja un `style=""` colgado. Lo limpia
@@ -129,7 +322,8 @@ El atributo `style` vacío que quedaba en el `<body>` era residuo real:
 
 **Ciclo completo sin degradación:** tras 3 activaciones y 2 resets sigue
 habiendo exactamente 1 `<svg>` de filtros con 4 IDs únicos, 1 wrapper, 1
-`<style>`, 1 `FontFace`, 1 burbuja de TTS y 1 panel. El atajo Alt + L sigue
+`<style>` de host con sus 5 secciones en el orden fijo, 1 `FontFace`, 2 paneles
+de máscara, 1 burbuja de TTS, 1 región viva y 1 panel. El atajo Alt + L sigue
 arrancando y sosteniendo la lectura — con un `keydown` duplicado haría
 speak→cancel y quedaría en silencio.
 
@@ -413,6 +607,9 @@ misma clase de ayuda, pero conceptualmente es otra cosa.
 - La referencia se arma como `url(<href-sin-hash>#id)` y no como `url(#id)` a
   secas, porque un `<base href>` en el sitio host rompe las referencias de solo
   fragmento. Se recalcula en cada aplicación por las SPA que cambian la URL.
+- La feature **no escribe `body.style.filter`**: registra su capa en
+  `core/host-filter.ts`, que la compone con las de saturación y contraste. Ver
+  [Los tres controles de color](#los-tres-controles-de-color-y-por-qué-comparten-un-módulo).
 
 ### Por qué el filtro va al `<body>` y no al `<html>`
 
@@ -428,7 +625,8 @@ que hacen `document.body.innerHTML = ...`.
 **Limitación conocida:** aplicar `filter` al `<body>` lo convierte en containing
 block de sus descendientes `position: fixed`. En sitios con header pegajoso o
 modales, eso puede alterar el posicionamiento mientras el filtro está activo.
-Es inherente a los filtros CSS. Si algún cliente lo sufre, la salida sería
+Es inherente a los filtros CSS, y alcanza por igual a la saturación y al
+contraste invertido, que usan la misma propiedad. Si algún cliente lo sufre, la salida sería
 montar el widget en el top layer (`popover`), que escapa a los filtros de los
 ancestros.
 
@@ -622,16 +820,27 @@ src/
     state.ts           Store con suscripción, persiste en cada cambio.
     storage.ts         localStorage namespaced y a prueba de excepciones.
     types.ts           WidgetState, WidgetConfig y el contrato Feature.
+    host-css.ts        Hoja única inyectada en el host. Ordena las secciones.
+    host-filter.ts     Compone el `filter` del <body> entre sus tres dueños.
+    text-css.ts        Exclusiones de fuentes de ícono y scopes compartidos.
   features/
     index.ts           Registro de features (define el orden del menú).
     colorblind/        Matrices de corrección + filtros SVG.
+    contrast/          Invertido (filtro) + oscuro y claro (CSS).
+    saturation/        Baja, alta y nula. Solo filtro.
     font-size/         Pasos discretos + las dos estrategias de escalado.
+    line-spacing/      Interlineado 1.5x / 1.75x / 2x.
+    text-spacing/      Interletrado e interpalabra (SC 1.4.12).
+    text-align/        Alineación forzada izquierda / derecha / centro.
+    reading-mask/      Máscara de lectura que sigue al cursor y al foco.
     tts/               speechSynthesis + botón contextual de selección.
     dyslexia-font/     Carga diferida de OpenDyslexic + espaciado WCAG.
                        Incluye el .woff2 subseteado y su font-meta.ts.
     reset/             Limpieza de todas las preferencias.
   ui/
     widget.ts          Botón flotante, panel, focus trap, ARIA.
+    cycle.ts           Control cíclico: un botón que rota entre sus estados.
+    announcer.ts       Región viva del panel (role="status"). SC 4.1.3.
     focus-trap.ts      Ciclo de Tab dentro del panel.
     icons.ts           SVG inline (decorativos, aria-hidden).
     logo.ts            Logo del botón, vectorizado. Generado.
@@ -685,6 +894,12 @@ Reglas que no se negocian al escribir una feature:
    de página escala el `font-size` del `<html>` del host; si la UI del widget
    usara `rem`, se escalaría a sí misma.
 4. **Nada de red.** Fuentes, iconos y estilos van empaquetados en el bundle.
+5. **Las propiedades compartidas no se escriben directo.** Si la feature toca el
+   `filter` del `<body>`, va por `core/host-filter.ts`; si inyecta CSS en el
+   host, va por `core/host-css.ts`. Escribir `body.style.filter` o agregar un
+   `<style>` propio le borra el trabajo a otra feature en cuanto alguien use las
+   dos a la vez — y las combinaciones que se rompen así no aparecen probando una
+   feature por vez.
 
 ### Decisiones de diseño
 

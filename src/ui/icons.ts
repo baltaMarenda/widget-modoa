@@ -28,3 +28,54 @@ export const ICON_STOP = `
 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
   <rect x="6" y="6" width="12" height="12" rx="2"></rect>
 </svg>`;
+
+/*
+ * Iconos de los controles cíclicos. Son de trazo, no de relleno: el estilo
+ * (`.opt--cycle svg`) les pone `fill: none; stroke: currentColor`, así que el
+ * ícono cambia de color solo cuando el botón pasa a estado activo. Lo que
+ * necesite relleno lo declara inline, como la media luna del contraste.
+ */
+
+/** Círculo con media luna llena. */
+export const ICON_CONTRAST = `
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <circle cx="12" cy="12" r="9"></circle>
+  <path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none"></path>
+</svg>`;
+
+/** Dos topes verticales con una flecha doble en el medio: interletrado. */
+export const ICON_TEXT_SPACING = `
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <path d="M4 5v14M20 5v14"></path>
+  <path d="M8 12h8"></path>
+  <path d="M10.5 9.5 8 12l2.5 2.5M13.5 9.5 16 12l-2.5 2.5"></path>
+</svg>`;
+
+/** Marco con una banda destacada al medio: la máscara de lectura. */
+export const ICON_FOCUS = `
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+  <path d="M3 10h18M3 14h18"></path>
+  <path d="M6 12h6"></path>
+</svg>`;
+
+/** Renglones con una flecha doble vertical al costado: interlineado. */
+export const ICON_LINE_SPACING = `
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <path d="M10 5h11M10 12h11M10 19h11"></path>
+  <path d="M4.5 6v12"></path>
+  <path d="M2.5 8 4.5 6l2 2M2.5 16l2 2 2-2"></path>
+</svg>`;
+
+/** Renglones desparejos: alineación. */
+export const ICON_TEXT_ALIGN = `
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <path d="M4 5h16M4 10h10M4 15h16M4 20h7"></path>
+</svg>`;
+
+/** Gota con la mitad llena: saturación. */
+export const ICON_SATURATION = `
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <path d="M12 3.2c3.6 3.9 6 7 6 10.1a6 6 0 0 1-12 0c0-3.1 2.4-6.2 6-10.1z"></path>
+  <path d="M12 3.2c3.6 3.9 6 7 6 10.1a6 6 0 0 1-6 6z" fill="currentColor" stroke="none"></path>
+</svg>`;

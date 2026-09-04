@@ -4,7 +4,7 @@ import type {
   FeatureContext,
   WidgetState,
 } from '../../core/types';
-import { removeInlineProperty } from '../../core/dom';
+import { setHostFilter } from '../../core/host-filter';
 import {
   FILTER_ATTR,
   filterUrl,
@@ -30,10 +30,12 @@ function clampMode(value: string): ColorblindMode {
  * <html>, el propio widget quedaría filtrado. Por eso el host del widget se
  * monta como hijo de <html> (ver core/mount.ts) y el filtro va al <body>: el
  * sitio queda adentro, el widget afuera.
+ *
+ * Quien escribe la propiedad es core/host-filter.ts, no esta feature: la
+ * saturación y el contraste invertido también quieren `filter` sobre el mismo
+ * <body>, y `filter` es una sola propiedad. Acá se registra la capa y allá se
+ * compone la cadena en un orden fijo.
  */
-function target(): HTMLElement {
-  return document.body;
-}
 
 export function createColorblindFeature(): Feature {
   let options: HTMLButtonElement[] = [];
@@ -59,24 +61,21 @@ export function createColorblindFeature(): Feature {
      */
     apply(state: Readonly<WidgetState>) {
       const mode = clampMode(state.colorblind);
-      const body = target();
 
       if (mode === 'none') {
-        removeInlineProperty(body, 'filter');
-        body.removeAttribute(FILTER_ATTR);
+        setHostFilter('colorblind', null);
+        document.body.removeAttribute(FILTER_ATTR);
       } else {
         injectFilters(); // idempotente: si ya está, lo reutiliza
-        // !important para ganarle a cualquier `filter` que declare el sitio.
-        body.style.setProperty('filter', filterUrl(mode), 'important');
-        body.setAttribute(FILTER_ATTR, mode);
+        setHostFilter('colorblind', filterUrl(mode));
+        document.body.setAttribute(FILTER_ATTR, mode);
       }
       syncOptions(mode);
     },
 
     teardown() {
-      const body = target();
-      removeInlineProperty(body, 'filter');
-      body.removeAttribute(FILTER_ATTR);
+      setHostFilter('colorblind', null);
+      document.body.removeAttribute(FILTER_ATTR);
       removeFilters();
     },
 

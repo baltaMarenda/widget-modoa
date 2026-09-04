@@ -10,12 +10,43 @@ export type ColorblindMode =
 /** Índice dentro de FONT_SIZE_STEPS (100/115/130/150%). 0 = sin cambios. */
 export type FontSizeStep = 0 | 1 | 2 | 3;
 
+/*
+ * Los seis modos que siguen son controles cíclicos: un solo botón que rota
+ * entre sus estados. En todos, el primer valor del tipo es el estado apagado y
+ * se escribe `'off'` —y no `'none'`— a propósito: en saturación, "ninguna
+ * saturación" es un estado activo (la escala de grises), así que reservar
+ * `'none'` para eso evita un enumerado ambiguo. El resto sigue la misma
+ * convención por consistencia.
+ */
+
+/** Invertido, contraste oscuro, contraste claro. */
+export type ContrastMode = 'off' | 'invert' | 'dark' | 'light';
+
+/** Interletrado e interpalabra. Ver WCAG 2.1 SC 1.4.12. */
+export type TextSpacingLevel = 'off' | 'light' | 'moderate' | 'heavy';
+
+/** Interlineado, como múltiplo del tamaño de fuente. */
+export type LineSpacingLevel = 'off' | '1.5' | '1.75' | '2';
+
+/** Alineación forzada de los textos del sitio. */
+export type TextAlignMode = 'off' | 'left' | 'right' | 'center';
+
+/** `none` es saturación nula: escala de grises. */
+export type SaturationLevel = 'off' | 'low' | 'high' | 'none';
+
 /** Todo lo que se persiste en localStorage, namespaced por client-id. */
 export interface WidgetState {
   colorblind: ColorblindMode;
   fontSizeStep: FontSizeStep;
   tts: boolean;
   dyslexiaFont: boolean;
+  contrast: ContrastMode;
+  textSpacing: TextSpacingLevel;
+  lineSpacing: LineSpacingLevel;
+  textAlign: TextAlignMode;
+  saturation: SaturationLevel;
+  /** Máscara de lectura que sigue al cursor. */
+  readingMask: boolean;
 }
 
 export const DEFAULT_STATE: WidgetState = {
@@ -23,6 +54,12 @@ export const DEFAULT_STATE: WidgetState = {
   fontSizeStep: 0,
   tts: false,
   dyslexiaFont: false,
+  contrast: 'off',
+  textSpacing: 'off',
+  lineSpacing: 'off',
+  textAlign: 'off',
+  saturation: 'off',
+  readingMask: false,
 };
 
 export type Lang = 'es' | 'en';

@@ -1,37 +1,13 @@
 import type { Feature, FeatureContext, WidgetState } from '../../core/types';
+import { setHostCss } from '../../core/host-css';
+import { resetIconSpacing, textScope } from '../../core/text-css';
 import {
   FONT_FILE_NAME,
   OPEN_DYSLEXIC_FAMILY,
 } from './font-meta';
 
-const STYLE_ID = 'modoa-dyslexia-style';
-
 /** Bandera en el <html> del host. Prender/apagar es solo tocar este atributo. */
 export const DYSLEXIA_ATTR = 'data-modoa-dyslexia';
-
-/**
- * Selectores de elementos que NO deben recibir la fuente.
- *
- * Las fuentes de íconos (Font Awesome, Material Icons, Glyphicons y compañía)
- * dibujan glifos en el área de uso privado de Unicode. Si les pisamos el
- * font-family, los íconos del sitio se convierten en cuadraditos vacíos — es
- * la forma más rápida de que un cliente pida dar de baja el widget.
- *
- * Se excluye por clase porque los pseudo-elementos ::before/::after heredan el
- * font-family de su elemento originante: excluyendo el elemento, el ícono
- * sobrevive.
- */
-const ICON_SELECTORS = [
-  '[class*="icon" i]',
-  '[class*="fa-" i]',
-  '[class*="glyphicon" i]',
-  '[class*="material-" i]',
-  '[class*="symbol" i]',
-];
-
-const ICON_EXCLUSIONS = ICON_SELECTORS.map(
-  (selector) => `:not(${selector})`,
-).join('');
 
 /*
  * Valores de espaciado: WCAG 2.1, Success Criterion 1.4.12 "Text Spacing"
@@ -51,10 +27,14 @@ const PARAGRAPH_SPACING = '2em'; // >= 2 veces
  * Las reglas NO declaran @font-face: la fuente se registra por JS con la API
  * FontFace cuando termina de bajar. Así el espaciado se aplica al instante
  * aunque la descarga falle o tarde.
+ *
+ * El espaciado que fija esta feature es el del paquete de la fuente, no una
+ * elección explícita de la persona. Por eso en core/host-css.ts la sección
+ * `dyslexia` va ANTES que `text-spacing` y `line-spacing`: si además se usa
+ * alguno de esos dos controles, gana el control.
  */
 function buildCss(): string {
-  const scope = `html[${DYSLEXIA_ATTR}] body`;
-  const target = `${scope} *${ICON_EXCLUSIONS}`;
+  const [scope, target] = textScope(DYSLEXIA_ATTR);
 
   return `
 ${scope},
@@ -71,20 +51,11 @@ ${scope} blockquote {
   margin-bottom: ${PARAGRAPH_SPACING} !important;
 }
 
-/*
- * Excluir del selector no alcanza: letter-spacing y word-spacing se heredan,
- * así que llegan igual desde el ancestro que sí matcheó. Un ícono con espacio
- * extra a la derecha queda desalineado respecto de su texto.
- */
-${ICON_SELECTORS.map((selector) => `${scope} ${selector}`).join(',\n')} {
-  letter-spacing: normal !important;
-  word-spacing: normal !important;
-}
+${resetIconSpacing(scope)}
 `;
 }
 
 export function createDyslexiaFontFeature(): Feature {
-  let styleElement: HTMLStyleElement | null = null;
   let options: HTMLButtonElement[] = [];
   /** Promesa de la descarga. Se guarda para no volver a pedirla nunca. */
   let fontRequest: Promise<void> | null = null;
@@ -100,20 +71,6 @@ export function createDyslexiaFontFeature(): Feature {
     for (const [index, button] of options.entries()) {
       button.setAttribute('aria-checked', String((index === 1) === on));
     }
-  }
-
-  function ensureStyle(): void {
-    if (styleElement?.isConnected) return;
-    const existing = document.getElementById(STYLE_ID);
-    if (existing instanceof HTMLStyleElement) {
-      styleElement = existing;
-      return;
-    }
-    const element = document.createElement('style');
-    element.id = STYLE_ID;
-    element.textContent = buildCss();
-    document.head.appendChild(element);
-    styleElement = element;
   }
 
   /**
@@ -173,7 +130,7 @@ export function createDyslexiaFontFeature(): Feature {
 
     apply(state: Readonly<WidgetState>, ctx: FeatureContext) {
       if (state.dyslexiaFont) {
-        ensureStyle();
+        setHostCss('dyslexia', buildCss());
         // No se espera la descarga: el espaciado entra ya, la fuente entra
         // cuando llega. `font-display: swap` hace la transición.
         void loadFont(ctx.config);
@@ -195,8 +152,7 @@ export function createDyslexiaFontFeature(): Feature {
       fontRequest = null;
 
       document.documentElement.removeAttribute(DYSLEXIA_ATTR);
-      styleElement?.remove();
-      styleElement = null;
+      setHostCss('dyslexia', null);
     },
 
     render(ctx: FeatureContext) {
