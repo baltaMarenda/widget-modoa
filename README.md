@@ -4,8 +4,8 @@ Widget de accesibilidad web embebible y standalone. Se instala con una línea de
 código en cualquier sitio, sin dependencias, sin backend y sin tocar el CSS ni el
 JS del sitio anfitrión.
 
-- **Un solo archivo JS** `dist/widget.js` (IIFE, auto-ejecutable, **27.9 kB /
-  9.6 kB gzip**). La fuente para dislexia es el único asset aparte, y baja
+- **Un solo archivo JS** `dist/widget.js` (IIFE, auto-ejecutable, **70.4 kB /
+  23.9 kB gzip**). La fuente para dislexia es el único asset aparte, y baja
   únicamente si el usuario prende esa opción.
 - **Cero dependencias en runtime.** Nada de React, Vue ni librerías de UI.
 - **Aislado en Shadow DOM.** Los estilos del sitio no afectan al widget, ni los
@@ -58,26 +58,31 @@ usar client-ids distintos evita que se pisen las preferencias.
 
 ## Features
 
-| Feature                     | Alcance        | Control  | Estado   |
-| --------------------------- | -------------- | -------- | -------- |
-| Botón flotante + menú       | Shadow DOM     | —        | ✅ Listo |
-| Aumento de tamaño de página | Documento host | Opciones | ✅ Listo |
-| Espaciado de líneas         | Documento host | Cíclico  | ✅ Listo |
-| Espaciado de texto          | Documento host | Cíclico  | ✅ Listo |
-| Alineación                  | Documento host | Cíclico  | ✅ Listo |
-| Foco (máscara de lectura)   | Shadow DOM     | Cíclico  | ✅ Listo |
-| Fuente para dislexia        | Documento host | Opciones | ✅ Listo |
-| Contraste                   | Documento host | Cíclico  | ✅ Listo |
-| Saturación                  | Documento host | Cíclico  | ✅ Listo |
-| Daltonización (Machado)     | Documento host | Opciones | ✅ Listo |
-| Lectura por voz (TTS)       | Selección      | —        | ✅ Listo |
-| Reset de preferencias       | —              | —        | ✅ Listo |
+| Feature                      | Alcance        | Control      | Estado   |
+| ---------------------------- | -------------- | ------------ | -------- |
+| Botón flotante + menú        | Shadow DOM     | —            | ✅ Listo |
+| Traducción de la página      | Documento host | Desplegable  | ✅ Listo |
+| Perfiles de accesibilidad    | Estado         | Desplegable  | ✅ Listo |
+| Aumento de tamaño de página  | Documento host | Opciones     | ✅ Listo |
+| Espaciado de líneas          | Documento host | Cíclico      | ✅ Listo |
+| Espaciado de texto           | Documento host | Cíclico      | ✅ Listo |
+| Alineación                   | Documento host | Cíclico      | ✅ Listo |
+| Foco (máscara de lectura)    | Shadow DOM     | Cíclico      | ✅ Listo |
+| Fuente para dislexia         | Documento host | Opciones     | ✅ Listo |
+| Contraste                    | Documento host | Cíclico      | ✅ Listo |
+| Contraste inteligente        | Documento host | Cíclico      | ✅ Listo |
+| Saturación                   | Documento host | Cíclico      | ✅ Listo |
+| Pausar animaciones           | Documento host | Cíclico      | ✅ Listo |
+| Cursor grande                | Host + shadow  | Cíclico      | ✅ Listo |
+| Daltonización (Machado)      | Documento host | Opciones     | ✅ Listo |
+| Lectura por voz (TTS)        | Selección      | —            | ✅ Listo |
+| Reset de preferencias        | —              | —            | ✅ Listo |
 
 **Control cíclico** = un solo botón que rota entre sus estados en cada
 pulsación, y vuelve siempre a "apagado" al cerrar la vuelta. Ocupa media
 columna de la grilla del panel, contra la fila entera que necesita un grupo con
-todas las opciones a la vista. Es lo que permite tener doce features sin que el
-menú sea una lista interminable.
+todas las opciones a la vista. Es lo que permite tener diecisiete features sin
+que el menú sea una lista interminable.
 
 El costo de ese ahorro es real y se paga en dos lugares:
 
@@ -91,6 +96,56 @@ El costo de ese ahorro es real y se paga en dos lugares:
 
 Y el estado actual va siempre escrito con todas las letras debajo del nombre de
 la feature, no solo marcado con el color de fondo: SC 1.4.1 "Use of Color".
+
+**Desplegable** = una cabecera que pliega y despliega su lista de opciones
+(`ui/disclosure.ts`). Es para las listas que no entran en un ciclo de cuatro
+estados ni pueden estar siempre a la vista: los seis perfiles y los doce
+idiomas. Lo que cuesta —las opciones no están en el árbol hasta que alguien
+abre— se paga con `aria-expanded` en la cabecera y con el valor actual escrito
+ahí mismo, para no tener que abrir solo para saber qué está puesto. Escape
+adentro del desplegable cierra el desplegable y **no** el panel entero: cerrar
+todo de un saque obligaría a volver a abrir el menú y navegar hasta acá de nuevo.
+
+---
+
+## Perfiles de accesibilidad
+
+El resto del menú son quince controles, cada uno con su nombre técnico. Quien
+sabe que necesita "interlineado 1.75 y saturación alta" los encuentra; quien
+solo sabe que ve poco, no. Un perfil traduce la necesidad a la combinación:
+
+| Perfil          | Qué enciende                                                                                        |
+| --------------- | --------------------------------------------------------------------------------------------------- |
+| **Daltonismo**  | Contraste inteligente · saturación alta                                                              |
+| **Dislexia**    | Fuente para dislexia · animaciones pausadas · espaciado ligero · interlineado 1.5×                   |
+| **Visión baja** | Animaciones pausadas · cursor grande · página al 130 % · saturación alta · espaciado moderado · 1.75× |
+| **Cognitivo**   | Página al 115 % · foco                                                                               |
+| **Epilepsia**   | Animaciones pausadas · saturación baja                                                               |
+| **TDAH**        | Animaciones pausadas · foco · saturación baja                                                        |
+
+No hay perfiles de discapacidad motora ni de ceguera **a propósito**: lo que esas
+dos necesitan —navegación por teclado completa, estructura semántica correcta
+para el lector de pantalla— no es algo que un widget pueda activar desde afuera.
+Prometerlo con un botón sería peor que no ofrecerlo.
+
+Dos decisiones definen cómo se comportan:
+
+1. **El perfil parte de cero.** Elegirlo restablece todo a los valores por
+   defecto y aplica exactamente lo suyo. Así "Dislexia" se ve siempre igual, sin
+   importar qué hubiera activado antes. Un perfil que se sumara a lo que ya
+   estaba daría un resultado distinto cada vez, imposible de reproducir o de
+   explicar en soporte. Volver a elegir el perfil activo lo apaga.
+2. **El perfil activo se deduce del estado, no se guarda.** No hay campo
+   `profile` en `WidgetState`: `apply` busca el preset que coincida exactamente
+   con el estado actual. Si la persona toca cualquier control a mano, deja de
+   coincidir y ningún perfil queda marcado. Guardarlo aparte permitiría que el
+   panel dijera "Dislexia" sobre un estado que ya no es el de dislexia.
+
+Por qué el perfil de **daltonismo no enciende ningún filtro de daltonización**:
+el filtro correcto depende del tipo —protanopía, deuteranopía, tritanopía— y
+elegir uno al azar empeora la visión de los otros dos. Lo que sirve para los
+tres es más saturación, que separa tonos que estaban cerca, y contraste medido,
+que garantiza la legibilidad sin depender del color.
 
 ---
 
@@ -162,9 +217,204 @@ borde explícito a los controles de formulario, que si no se funden con el fondo
 
 ---
 
+## Contraste inteligente
+
+Los tres modos de contraste de arriba imponen una paleta a toda la página.
+Cumplen, pero borran el diseño del sitio. El contraste inteligente hace lo
+contrario: **mide** el contraste real de cada texto contra su fondo real y
+corrige solo lo que no llega al mínimo de WCAG (SC 1.4.3), moviendo la
+luminosidad del texto y **conservando su tono**. Un enlace azul de marca sigue
+siendo azul, más claro o más oscuro; no se convierte en el amarillo de la paleta
+de alto contraste.
+
+`features/smart-contrast/contrast-math.ts` no tiene DOM y es donde vive el
+estándar: luminancia relativa, relación de contraste, composición de alfa y la
+corrección. `index.ts` es lo que lo conecta con la página.
+
+### Cómo mide
+
+1. Recorre los elementos del `<body>` que dibujan **texto propio** (un nodo de
+   texto no vacío entre sus hijos directos), hasta un tope de 4000 — un DOM
+   patológico no puede congelar el hilo principal.
+2. **Fondo efectivo**: sube por los ancestros componiendo alfas hasta el primer
+   fondo opaco. Si en el camino aparece un `background-image` —una foto o un
+   degradado— el elemento **se saltea**: ahí no hay un color único contra el que
+   medir, y elegir uno a ojo daría una corrección que puede empeorar la
+   legibilidad en media caja. Para esos casos están los modos forzados.
+3. **Objetivo**: 4.5:1, o 3:1 si el texto es grande (≥24 px, o ≥18.66 px en
+   negrita). Es la definición literal de SC 1.4.3.
+4. **Corrección**: búsqueda binaria sobre la L de HSL, conservando H y S, hasta
+   el primer valor que cumpla — el más cercano al color original que alcanza.
+
+Un detalle que es fácil hacer mal: la dirección —hacia el blanco o hacia el
+negro— se decide comparando cuánto contrasta cada extremo contra el fondo, **no**
+por un umbral de luminosidad. El punto donde el blanco y el negro empatan no es
+el gris del medio sino una luminancia relativa de ~0.179, porque la fórmula de
+WCAG no es simétrica. Con el umbral ingenuo en 0.5, todos los fondos de
+luminancia intermedia se corrigen para el lado equivocado.
+
+### Cómo se aplica
+
+Una regla por **color corregido**, no por elemento: en una página real los
+colores distintos son unas pocas decenas aunque los textos sean miles. Los
+elementos que comparten corrección comparten marca:
+
+```css
+html[data-modoa-smart-contrast] body [data-modoa-sc="3"] { color: #197fd6 !important; }
+```
+
+El `html … body …` delante del atributo no es decorativo: sube la especificidad
+a 0-3-1 para ganarle al CSS del sitio, que suele apuntar con clases.
+
+Se recalcula en **cada** cambio de estado (subir el tamaño de página mueve el
+umbral de "texto grande"; los modos de contraste cambian los colores a medir) y
+con un `MutationObserver` para el contenido que llega después. El observer mira
+solo `childList`: como lo único que escribe la feature son atributos, no puede
+dispararse por su propio trabajo.
+
+### Cómo convive con las otras features de color
+
+- Con contraste **Oscuro** o **Claro** activo, los colores computados ya son los
+  de la paleta forzada (21:1). No encuentra nada que corregir y no emite ninguna
+  regla: se apaga sola, no hace falta excluirla a mano.
+- Con contraste **Invertido** o con **saturación**, el `filter` del `<body>` es
+  un efecto de render posterior y los colores computados no cambian. No importa:
+  invertir es simétrico respecto de la fórmula de WCAG y `saturate()` conserva la
+  luminancia, así que la relación calculada sobrevive a las dos.
+
+Por eso `smartContrastFeature` va **inmediatamente después** de `contrastFeature`
+en `features/index.ts`: ese array es también el orden de `apply`, y hace falta
+medir con la hoja de contraste ya inyectada.
+
+---
+
+## Pausar animaciones
+
+**WCAG 2.1 SC 2.2.2 "Pause, Stop, Hide"** (nivel A) pide un control para detener
+todo lo que se mueva más de cinco segundos sin que la persona lo haya pedido.
+Fuera del criterio, es lo primero que necesita quien tiene epilepsia
+fotosensible, déficit de atención o mareo inducido por movimiento — por eso los
+tres perfiles correspondientes lo encienden.
+
+Se congelan las animaciones CSS, las transiciones y el scroll suave, y se pausa
+el `<video>`/`<audio>` que esté sonando.
+
+`animation-play-state: paused` y **no** `animation: none`: anular la animación
+devuelve cada elemento a su estado inicial, así que un carrusel que dejaba
+visible la tercera diapositiva vuelve a la primera, y una entrada animada que
+terminaba en `opacity: 1` se queda invisible para siempre. Pausar escondería
+contenido, que es exactamente lo contrario de lo que se busca.
+
+Del media se lleva la cuenta de **cuál pausó la feature**, para que al reanudar
+vuelva a sonar solo lo que estaba sonando: un video que la persona ya había
+pausado tiene que seguir pausado.
+
+**Límite conocido:** un GIF animado no se pausa. Hacerlo exige decodificarlo y
+repintar el primer cuadro en un `<canvas>` que reemplace al `<img>`, y eso ya no
+es un cambio reversible sobre el DOM del sitio.
+
+---
+
+## Cursor grande
+
+El puntero del sistema mide unos 20 px y es un objetivo difícil de seguir con
+baja visión, con nistagmo o con cualquier dificultad de seguimiento visual.
+
+Los tres punteros —flecha, mano y barra de inserción— se dibujan como SVG en un
+lienzo de 32×32 y se embeben como data URI (regla 4: nada de red). Relleno
+blanco con borde negro, que es la única combinación que se ve tanto sobre fondo
+claro como sobre oscuro. Dos tamaños: 48 px y 64 px; los navegadores descartan
+los cursores de más de 128 px.
+
+Cada declaración cierra con el keyword nativo de respaldo:
+
+```css
+cursor: url("data:image/svg+xml,…") 21 8, pointer !important;
+```
+
+El respaldo no es decorativo: si el navegador descarta la imagen —tamaño fuera
+de rango, un sistema sin cursores personalizados— sin él la declaración entera
+queda inválida y el sitio se quedaría sin cursor.
+
+El atributo `data-modoa-cursor` se escribe en **dos** lugares: en el `<html>` del
+sitio, para el CSS del host, y en el elemento host del widget, donde lo leen las
+reglas `:host([data-modoa-cursor="…"])` de una hoja que la feature inyecta en el
+shadow. Si adentro del menú el puntero volviera al tamaño normal, la feature
+fallaría justo en el único lugar donde se comprueba que funcionó.
+
+---
+
+## Traducción de la página
+
+La barrera de idioma no está en WCAG como criterio —SC 3.1.1 y 3.1.2 solo piden
+**declarar** el idioma, no ofrecerlo— pero es una barrera de acceso real, y para
+quien tiene una discapacidad cognitiva o de lectura leer en su lengua no es una
+comodidad sino la diferencia entre entender y no entender.
+
+### Por qué la API del navegador y no un servicio
+
+El modelo corre **en el dispositivo** (`Translator`, Chromium 138+). El contenido
+de la página del cliente no sale hacia ningún servidor, el widget no hace ni una
+petición de red y no hay una clave de API que administrar por sitio. El costo es
+la disponibilidad: hoy no existe en otros motores, así que `render()` devuelve
+`null` y el bloque **no se pinta** — el mismo criterio que ya usa la lectura por
+voz cuando no hay `speechSynthesis`. Ofrecer una opción muerta es peor que no
+ofrecerla.
+
+Todo lo que sabe de la API vive en `features/translate/translator.ts`; si cambia
+de forma o aparece otra, se toca ahí y la feature no se entera.
+
+### El gesto del usuario
+
+`Translator.create()` **exige un gesto** cuando el modelo del idioma todavía no
+está en el dispositivo: bajar cientos de megabytes no puede dispararse solo.
+Dos consecuencias en el código:
+
+- `create()` es lo **primero** que se llama al elegir un idioma, sin ningún
+  `await` por delante. La activación transitoria que deja el clic dura unos
+  segundos y consultar antes la disponibilidad podía costar justo esa activación.
+  La disponibilidad se consulta **después**, solo si hubo error, para dar el
+  motivo exacto.
+- Si aun así falta el gesto, el estado **vuelve a "sin traducir"** y el panel
+  pide volver a elegir el idioma. No es cosmético: con el estado en el idioma
+  fallido, volver a tocarlo no sería un cambio de estado y no pasaría nada.
+
+### Qué se traduce y qué no
+
+- Los nodos de texto del `<body>`, salteando `script`, `style`, `code`, `pre` y
+  compañía, y **todo subárbol con `translate="no"` o `.notranslate`** — la señal
+  estándar de HTML para nombres propios, código y marcas.
+- Los atributos `alt`, `title`, `placeholder` y `aria-label`. Los dos primeros y
+  el último son **nombre accesible**: es lo único que escucha quien usa un lector
+  de pantalla. En un widget de accesibilidad, traducir el texto visible y dejar
+  el nombre accesible en el idioma original sería traducir la página para quien
+  ve y no para quien escucha.
+- El contenido que llega después, vía `MutationObserver` con rebote.
+
+Del texto original se guarda todo en un `Map`, que es lo que permite volver
+intacto a "Sin traducir" y en el teardown. El espacio de alrededor de cada nodo
+se conserva a mano y no con `replace()`, porque el texto traducido puede contener
+`$&` o `$1` y `replace()` los interpretaría como patrones.
+
+Mientras está activa, el `<html lang>` pasa al idioma nuevo: es lo que hace que
+un lector de pantalla cambie de voz (SC 3.1.1) y, de paso, que la lectura por voz
+del propio widget lea con la voz correcta, que la resuelve leyendo de ahí. El
+valor original se guarda y se restaura.
+
+Los idiomas del desplegable llevan su nombre **en ese idioma** (Deutsch, 日本語):
+quien busca esta opción es, por definición, alguien que no lee bien el idioma en
+el que está el panel.
+
+Por el mismo motivo el bloque va **primero en el panel**, arriba incluso de los
+perfiles: es la única opción que le sirve a alguien que no puede leer el resto
+del menú, y más abajo quedaría escondida detrás de quince rótulos escritos en el
+idioma que esa persona no entiende.
+
+---
+
 ## La hoja de estilos compartida, y por qué el orden importa
 
-Cuatro features escriben CSS sobre el sitio host y varias pisan las **mismas
+Siete features escriben CSS sobre el sitio host y varias pisan las **mismas
 propiedades**: la fuente para dislexia fija `line-height`, `letter-spacing` y
 `word-spacing`; el espaciado de texto fija los dos últimos; el espaciado de
 líneas fija el primero. Todas usan `!important` sobre selectores de
@@ -177,9 +427,15 @@ revés. Por eso hay una sola hoja (`core/host-css.ts`, un `<style>` con id
 importar cuándo se activó cada una:
 
 ```
-contrast · text-align · dyslexia · text-spacing · line-spacing
-                        └── menor prioridad ────── mayor ────┘
+contrast · smart-contrast · text-align · dyslexia · text-spacing · line-spacing · animations · big-cursor
+                                         └── menor prioridad ────── mayor ────┘
 ```
+
+`smart-contrast` va detrás de `contrast` porque las dos escriben `color`: la
+corrección medida elemento por elemento le gana a la paleta forzada. (En la
+práctica no compiten, por lo que se explicó más arriba.) `animations` y
+`big-cursor` van al final y su posición da igual: escriben propiedades
+—`animation-play-state`, `cursor`— que no toca nadie más.
 
 La regla detrás de ese orden es "lo explícito le gana a lo que vino de
 arrastre". El espaciado de la fuente para dislexia viene incluido en el paquete
@@ -280,8 +536,8 @@ el store; el bloque `reset/` solo dibuja el botón y llama a `ctx.reset()`.
 ### Lo que hizo falta cambiar para que el reset sea reversible
 
 Un `teardown()` que borra nodos deja rota la reactivación si esos nodos se
-crean en `setup()`. Dos features pasaron a **inyección diferida**: crean sus
-nodos en `apply()`, la primera vez que hacen falta.
+crean en `setup()`. Tres features usan **inyección diferida**: crean sus nodos
+en `apply()`, la primera vez que hacen falta.
 
 - **Daltonización**: el `<svg>` de filtros se inyecta al elegir un filtro. Si
   se creara en `setup()`, después de un reset el `filter: url(#id)` apuntaría a
@@ -290,16 +546,22 @@ nodos en `apply()`, la primera vez que hacen falta.
   `teardown()` la da de baja de `document.fonts` y resetea la promesa de
   descarga, con un contador de generación para que una descarga que llegue
   tarde no registre la fuente después del reset.
+- **Cursor grande**: la hoja que inyecta en el shadow para que el puntero
+  también sea grande sobre el panel se crea al activar y se saca en el teardown.
+
+La traducción usa el mismo contador de generación que la fuente, y por el mismo
+motivo: una traducción en vuelo que llega tarde no debe escribir sobre un
+documento que ya se reseteó.
 
 Beneficio colateral: un sitio donde nadie usa esas features nunca recibe esos
 nodos en su DOM.
 
 ### Verificación
 
-Con **todas** las features activas a la vez (150 % con estrategia `transform` +
-deuteranopía + fuente dislexia + los seis controles cíclicos en su primer
-estado + una lectura por voz sonando), se aprieta reset y se compara el DOM del
-host campo por campo contra una firma tomada antes de activar nada: **cero
+Con **todas** las features activas a la vez (150 % + deuteranopía + fuente
+dislexia + los nueve controles cíclicos activos + la página traducida al inglés
++ una lectura por voz sonando), se aprieta reset y se compara el DOM del host
+campo por campo contra una firma tomada antes de activar nada: **cero
 diferencias**.
 
 | | Activado | Tras reset |
@@ -307,14 +569,17 @@ diferencias**.
 | Secciones / párrafos / ítems | 10 / 21 / 20 | 10 / 21 / 20 |
 | `#modoa-colorblind-filters` | 1 (con 4 `<filter>`) | 0 |
 | `#modoa-scale-wrapper` | 1 | 0 |
-| `#modoa-host-style` | 1 (con 5 secciones) | 0 |
+| `#modoa-host-style` | 1 (con 8 secciones) | 0 |
+| `#modoa-cursor-style` (en el shadow) | 1 | 0 |
 | `FontFace` registradas | 1 | 0 |
-| Atributos en `<html>` | `lang` + `data-modoa-`: `contrast`, `dyslexia`, `line-spacing`, `text-align`, `text-spacing` | `lang` |
-| Atributos en `<body>` | `data-modoa-colorblind`, `data-modoa-filter`, `data-modoa-scale`, `style` | ninguno |
+| Atributos en `<html>` | `lang` + `data-modoa-`: `scale`, `contrast`, `smart-contrast`, `dyslexia`, `line-spacing`, `text-align`, `text-spacing`, `animations`, `cursor` | `lang` (con su valor original) |
+| Atributos en `<body>` | `data-modoa-colorblind`, `data-modoa-filter`, `style` | ninguno |
+| Elementos con `data-modoa-sc` | los que hubo que corregir | 0 |
+| Texto de la página | traducido | el original, nodo por nodo |
 | Paneles de la máscara en el shadow | 2 | 0 |
 | `speechSynthesis` | hablando | detenido |
 | localStorage | con datos | `null` |
-| Controles cíclicos activos | 6 | 0 |
+| Controles cíclicos activos | 9 | 0 |
 
 El atributo `style` vacío que quedaba en el `<body>` era residuo real:
 `style.removeProperty()` deja un `style=""` colgado. Lo limpia
@@ -322,8 +587,9 @@ El atributo `style` vacío que quedaba en el `<body>` era residuo real:
 
 **Ciclo completo sin degradación:** tras 3 activaciones y 2 resets sigue
 habiendo exactamente 1 `<svg>` de filtros con 4 IDs únicos, 1 wrapper, 1
-`<style>` de host con sus 5 secciones en el orden fijo, 1 `FontFace`, 2 paneles
-de máscara, 1 burbuja de TTS, 1 región viva y 1 panel. El atajo Alt + L sigue
+`<style>` de host con sus secciones en el orden fijo, 1 hoja de cursor en el
+shadow, 1 `FontFace`, 2 paneles de máscara, 1 burbuja de TTS, 1 región viva y
+1 panel. El atajo Alt + L sigue
 arrancando y sosteniendo la lectura — con un `keydown` duplicado haría
 speak→cancel y quedaría en silencio.
 
@@ -825,14 +1091,19 @@ src/
     text-css.ts        Exclusiones de fuentes de ícono y scopes compartidos.
   features/
     index.ts           Registro de features (define el orden del menú).
+    profiles/          Perfiles de accesibilidad + sus presets.
     colorblind/        Matrices de corrección + filtros SVG.
     contrast/          Invertido (filtro) + oscuro y claro (CSS).
+    smart-contrast/    Corrección medida por elemento + la matemática de WCAG.
     saturation/        Baja, alta y nula. Solo filtro.
+    animations/        Pausa animaciones, transiciones y media (SC 2.2.2).
+    big-cursor/        Punteros grandes en SVG, host y shadow.
     font-size/         Pasos discretos + las dos estrategias de escalado.
     line-spacing/      Interlineado 1.5x / 1.75x / 2x.
     text-spacing/      Interletrado e interpalabra (SC 1.4.12).
     text-align/        Alineación forzada izquierda / derecha / centro.
     reading-mask/      Máscara de lectura que sigue al cursor y al foco.
+    translate/         Traducción en el dispositivo + la lista de idiomas.
     tts/               speechSynthesis + botón contextual de selección.
     dyslexia-font/     Carga diferida de OpenDyslexic + espaciado WCAG.
                        Incluye el .woff2 subseteado y su font-meta.ts.
@@ -840,6 +1111,7 @@ src/
   ui/
     widget.ts          Botón flotante, panel, focus trap, ARIA.
     cycle.ts           Control cíclico: un botón que rota entre sus estados.
+    disclosure.ts      Desplegable: cabecera plegable con lista de opciones.
     announcer.ts       Región viva del panel (role="status"). SC 4.1.3.
     focus-trap.ts      Ciclo de Tab dentro del panel.
     icons.ts           SVG inline (decorativos, aria-hidden).
@@ -893,7 +1165,10 @@ Reglas que no se negocian al escribir una feature:
 3. **Medidas en `px` dentro del Shadow DOM, nunca `rem`.** La feature de tamaño
    de página escala el `font-size` del `<html>` del host; si la UI del widget
    usara `rem`, se escalaría a sí misma.
-4. **Nada de red.** Fuentes, iconos y estilos van empaquetados en el bundle.
+4. **Nada de red.** Fuentes, iconos y estilos van empaquetados en el bundle. La
+   traducción no es una excepción: el modelo lo administra y lo ejecuta el
+   navegador en el dispositivo, el widget no hace ninguna petición y el
+   contenido del sitio no sale hacia ningún servidor.
 5. **Las propiedades compartidas no se escriben directo.** Si la feature toca el
    `filter` del `<body>`, va por `core/host-filter.ts`; si inyecta CSS en el
    host, va por `core/host-css.ts`. Escribir `body.style.filter` o agregar un

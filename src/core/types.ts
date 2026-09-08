@@ -34,6 +34,32 @@ export type TextAlignMode = 'off' | 'left' | 'right' | 'center';
 /** `none` es saturación nula: escala de grises. */
 export type SaturationLevel = 'off' | 'low' | 'high' | 'none';
 
+/** Tamaño del puntero del mouse. */
+export type BigCursorLevel = 'off' | 'large' | 'xlarge';
+
+/**
+ * Idioma al que se traduce la página. `'off'` es "sin traducir".
+ *
+ * Es una lista cerrada y no un string libre a propósito: core/storage.ts valida
+ * contra ella lo que sale de localStorage, y el desplegable del panel se arma
+ * con los mismos códigos. Los nombres visibles viven en features/translate/
+ * languages.ts, escritos cada uno en su propio idioma.
+ */
+export type TranslateLang =
+  | 'off'
+  | 'es'
+  | 'en'
+  | 'pt'
+  | 'fr'
+  | 'it'
+  | 'de'
+  | 'zh'
+  | 'ja'
+  | 'ko'
+  | 'ru'
+  | 'ar'
+  | 'hi';
+
 /** Todo lo que se persiste en localStorage, namespaced por client-id. */
 export interface WidgetState {
   colorblind: ColorblindMode;
@@ -47,6 +73,16 @@ export interface WidgetState {
   saturation: SaturationLevel;
   /** Máscara de lectura que sigue al cursor. */
   readingMask: boolean;
+  /**
+   * Corrección automática del contraste texto/fondo, elemento por elemento.
+   * Es lo opuesto a `contrast`: en vez de imponer una paleta, mide la que ya
+   * tiene el sitio y corrige solo lo que no llega al mínimo de WCAG.
+   */
+  smartContrast: boolean;
+  /** Congela animaciones CSS, transiciones y el media que se reproduce solo. */
+  pauseAnimations: boolean;
+  bigCursor: BigCursorLevel;
+  translateLang: TranslateLang;
 }
 
 export const DEFAULT_STATE: WidgetState = {
@@ -60,6 +96,10 @@ export const DEFAULT_STATE: WidgetState = {
   textAlign: 'off',
   saturation: 'off',
   readingMask: false,
+  smartContrast: false,
+  pauseAnimations: false,
+  bigCursor: 'off',
+  translateLang: 'off',
 };
 
 export type Lang = 'es' | 'en';

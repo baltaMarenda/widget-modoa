@@ -17,10 +17,13 @@ const STYLE_ID = 'modoa-host-style';
 
 export type CssSection =
   | 'contrast'
+  | 'smart-contrast'
   | 'text-align'
   | 'dyslexia'
   | 'text-spacing'
-  | 'line-spacing';
+  | 'line-spacing'
+  | 'animations'
+  | 'big-cursor';
 
 /**
  * De menor a mayor prioridad. La regla es "lo que la persona eligió explícito
@@ -31,13 +34,22 @@ export type CssSection =
  * - `text-spacing` (interletrado e interpalabra) va antes que `line-spacing`
  *   (interlineado). No se pisan entre sí; el orden solo importa si más
  *   adelante alguno suma una propiedad del otro.
+ * - `smart-contrast` va detrás de `contrast` porque las dos escriben `color`:
+ *   la corrección medida elemento por elemento le gana a la paleta forzada.
+ *   (En la práctica no compiten: con una paleta forzada el contraste ya es
+ *   21:1 y la corrección inteligente no emite ninguna regla.)
+ * - `animations` y `big-cursor` van al final y su posición da igual: escriben
+ *   propiedades —`animation-play-state`, `cursor`— que no toca nadie más.
  */
 const ORDER: readonly CssSection[] = [
   'contrast',
+  'smart-contrast',
   'text-align',
   'dyslexia',
   'text-spacing',
   'line-spacing',
+  'animations',
+  'big-cursor',
 ];
 
 const sections = new Map<CssSection, string>();

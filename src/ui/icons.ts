@@ -79,3 +79,46 @@ export const ICON_SATURATION = `
   <path d="M12 3.2c3.6 3.9 6 7 6 10.1a6 6 0 0 1-12 0c0-3.1 2.4-6.2 6-10.1z"></path>
   <path d="M12 3.2c3.6 3.9 6 7 6 10.1a6 6 0 0 1-6 6z" fill="currentColor" stroke="none"></path>
 </svg>`;
+
+/** Media luna dentro de un círculo, con un destello: contraste inteligente. */
+export const ICON_SMART_CONTRAST = `
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <circle cx="11" cy="13" r="8"></circle>
+  <path d="M11 5a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"></path>
+  <path d="M19 2.5v4M17 4.5h4"></path>
+</svg>`;
+
+/** Triángulo de reproducción junto a dos barras de pausa: animaciones. */
+export const ICON_ANIMATIONS = `
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <path d="M4 5.5v13l9-6.5-9-6.5z"></path>
+  <path d="M17 6v12M21 6v12"></path>
+</svg>`;
+
+/** Puntero de flecha con líneas de tamaño: cursor grande. */
+export const ICON_CURSOR = `
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <path d="M5 3l10.5 8.5-4.6.9 2.6 5.4-2.2 1-2.6-5.4-3.7 3V3z"></path>
+  <path d="M19 4v5M16.5 6.5h5"></path>
+</svg>`;
+
+/** Globo con meridianos: traducción. */
+export const ICON_TRANSLATE = `
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <circle cx="12" cy="12" r="9"></circle>
+  <path d="M3 12h18"></path>
+  <path d="M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"></path>
+</svg>`;
+
+/** Silueta de persona dentro de un marco: perfiles. */
+export const ICON_PROFILE = `
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <circle cx="12" cy="8.5" r="3.5"></circle>
+  <path d="M5 20a7 7 0 0 1 14 0"></path>
+</svg>`;
+
+/** Chevron hacia abajo: estado plegado de un desplegable. */
+export const ICON_CHEVRON = `
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <path d="M6 9.5l6 6 6-6"></path>
+</svg>`;

@@ -235,6 +235,11 @@
   grid-column: span 1;
 }
 
+/* El cíclico impar —hoy el cursor grande— no deja media columna vacía. */
+.panel__body > .opt--cycle.opt--wide {
+  grid-column: 1 / -1;
+}
+
 /* ------------------------------------------------- bloque de una feature -- */
 
 .feat {
@@ -399,6 +404,92 @@
   color: var(--m-muted);
 }
 
+.feat__hint[hidden] {
+  display: none;
+}
+
+/* ---------------------------------------------------------- desplegable -- */
+
+/*
+ * Una cabecera que pliega y despliega su lista de opciones. Se usa donde la
+ * lista es demasiado larga para tenerla siempre a la vista (perfiles, idiomas)
+ * y demasiado larga para un control cíclico, que obliga a pasar por todos los
+ * estados. Ver ui/disclosure.ts.
+ */
+
+.feat--disclosure {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.feat__toggle {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 12px;
+  font-family: inherit;
+  color: var(--m-fg);
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: start;
+}
+
+.feat__toggle:hover {
+  background: rgba(127, 127, 127, 0.12);
+}
+
+.feat__toggle:focus-visible {
+  outline: 3px solid var(--m-focus);
+  outline-offset: -2px;
+}
+
+.feat__toggle svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Empuja al chevron contra el borde derecho. */
+.feat__toggle-text {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.feat__chevron {
+  display: inline-flex;
+  color: var(--m-muted);
+  transition: transform 140ms ease;
+}
+
+.feat__toggle[aria-expanded='true'] .feat__chevron {
+  transform: rotate(180deg);
+}
+
+.feat__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.feat__panel[hidden] {
+  display: none;
+}
+
 /* -------------------------------------------- botón contextual de lectura -- */
 
 /*
@@ -550,7 +641,19 @@
   outline: none;
 }
 
+/*
+ * El cursor grande sobre la UI del widget NO se declara acá.
+ *
+ * Los punteros son data URI generados en features/big-cursor/cursors.ts, y
+ * repetirlos en esta hoja significaría mantener los mismos SVG en dos lugares.
+ * La feature inyecta su propia hoja en el shadow, con selectores
+ * `:host([data-modoa-cursor="…"])`, y la saca en el teardown.
+ */
+
 @media (prefers-reduced-motion: reduce) {
+  .feat__chevron {
+    transition: none;
+  }
   .fab {
     transition: none;
   }
