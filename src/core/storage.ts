@@ -60,6 +60,22 @@ const VALID_VALUES: {
   lineSpacing: ['off', '1.5', '1.75', '2'],
   textAlign: ['off', 'left', 'right', 'center'],
   saturation: ['off', 'low', 'high', 'none'],
+  bigCursor: ['off', 'large', 'xlarge'],
+  translateLang: [
+    'off',
+    'es',
+    'en',
+    'pt',
+    'fr',
+    'it',
+    'de',
+    'zh',
+    'ja',
+    'ko',
+    'ru',
+    'ar',
+    'hi',
+  ],
 };
 
 /**
