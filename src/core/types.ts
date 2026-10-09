@@ -83,6 +83,10 @@ export interface WidgetState {
   pauseAnimations: boolean;
   bigCursor: BigCursorLevel;
   translateLang: TranslateLang;
+  /** Esconde las imágenes de contenido y deja la página en texto. */
+  hideImages: boolean;
+  /** Subrayado, fondo de destaque y contorno en todos los enlaces. */
+  highlightLinks: boolean;
 }
 
 export const DEFAULT_STATE: WidgetState = {
@@ -100,6 +104,8 @@ export const DEFAULT_STATE: WidgetState = {
   pauseAnimations: false,
   bigCursor: 'off',
   translateLang: 'off',
+  hideImages: false,
+  highlightLinks: false,
 };
 
 export type Lang = 'es' | 'en';

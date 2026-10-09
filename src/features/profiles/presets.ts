@@ -2,7 +2,7 @@ import type { WidgetState } from '../../core/types';
 
 /**
  * Perfiles de accesibilidad: combinaciones de opciones que resuelven una
- * necesidad concreta, para no obligar a recorrer trece controles.
+ * necesidad concreta, para no obligar a recorrer quince controles.
  *
  * No hay perfiles de discapacidad motora ni de ceguera a propósito: lo que esas
  * dos necesitan —navegación por teclado completa, estructura semántica correcta

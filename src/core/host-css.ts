@@ -22,6 +22,8 @@ export type CssSection =
   | 'dyslexia'
   | 'text-spacing'
   | 'line-spacing'
+  | 'highlight-links'
+  | 'hide-images'
   | 'animations'
   | 'big-cursor';
 
@@ -38,8 +40,11 @@ export type CssSection =
  *   la corrección medida elemento por elemento le gana a la paleta forzada.
  *   (En la práctica no compiten: con una paleta forzada el contraste ya es
  *   21:1 y la corrección inteligente no emite ninguna regla.)
- * - `animations` y `big-cursor` van al final y su posición da igual: escriben
- *   propiedades —`animation-play-state`, `cursor`— que no toca nadie más.
+ * - `highlight-links` va detrás de las dos de contraste porque también escribe
+ *   `color` en los enlaces: el destaque pedido explícito le gana a la paleta.
+ * - `hide-images`, `animations` y `big-cursor` van al final y su posición da igual: escriben
+ *   propiedades —`opacity`, `animation-play-state`, `cursor`— que no toca
+ *   nadie más.
  */
 const ORDER: readonly CssSection[] = [
   'contrast',
@@ -48,6 +53,8 @@ const ORDER: readonly CssSection[] = [
   'dyslexia',
   'text-spacing',
   'line-spacing',
+  'highlight-links',
+  'hide-images',
   'animations',
   'big-cursor',
 ];

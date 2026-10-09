@@ -5,6 +5,8 @@ import { colorblindFeature } from './colorblind';
 import { contrastFeature } from './contrast';
 import { dyslexiaFontFeature } from './dyslexia-font';
 import { fontSizeFeature } from './font-size';
+import { hideImagesFeature } from './hide-images';
+import { highlightLinksFeature } from './highlight-links';
 import { lineSpacingFeature } from './line-spacing';
 import { profilesFeature } from './profiles';
 import { readingMaskFeature } from './reading-mask';
@@ -33,6 +35,7 @@ import { ttsFeature } from './tts';
  *   fuente para dislexia             (fila entera)
  *   contraste     ·  contraste int.  (color)
  *   saturación    ·  animaciones     (color y movimiento)
+ *   ocultar imág. ·  resaltar enl.   (simplificar la página)
  *   cursor grande                    (fila entera: es el cíclico impar)
  *   filtro de daltonismo             (fila entera)
  *   lectura por voz                  (fila entera)
@@ -44,7 +47,7 @@ import { ttsFeature } from './tts';
  *   detrás de quince rótulos escritos en el idioma que esa persona no entiende.
  * - `profilesFeature` va SEGUNDA, y por el mismo motivo va arriba de los
  *   controles sueltos: es la puerta de entrada para quien no sabe qué control
- *   necesita, y abajo de trece opciones no la encontraría nadie.
+ *   necesita, y abajo de quince opciones no la encontraría nadie.
  * - `smartContrastFeature` va INMEDIATAMENTE DESPUÉS de `contrastFeature`.
  *   Mide los colores computados del sitio, así que necesita correr con la hoja
  *   de contraste ya inyectada.
@@ -65,6 +68,8 @@ export const features: Feature[] = [
   smartContrastFeature,
   saturationFeature,
   animationsFeature,
+  hideImagesFeature,
+  highlightLinksFeature,
   bigCursorFeature,
   colorblindFeature,
   ttsFeature,

@@ -73,6 +73,8 @@ usar client-ids distintos evita que se pisen las preferencias.
 | Contraste inteligente        | Documento host | Cíclico      | ✅ Listo |
 | Saturación                   | Documento host | Cíclico      | ✅ Listo |
 | Pausar animaciones           | Documento host | Cíclico      | ✅ Listo |
+| Ocultar imágenes             | Documento host | Cíclico      | ✅ Listo |
+| Resaltar enlaces             | Documento host | Cíclico      | ✅ Listo |
 | Cursor grande                | Host + shadow  | Cíclico      | ✅ Listo |
 | Daltonización (Machado)      | Documento host | Opciones     | ✅ Listo |
 | Lectura por voz (TTS)        | Selección      | —            | ✅ Listo |
@@ -81,7 +83,7 @@ usar client-ids distintos evita que se pisen las preferencias.
 **Control cíclico** = un solo botón que rota entre sus estados en cada
 pulsación, y vuelve siempre a "apagado" al cerrar la vuelta. Ocupa media
 columna de la grilla del panel, contra la fila entera que necesita un grupo con
-todas las opciones a la vista. Es lo que permite tener diecisiete features sin
+todas las opciones a la vista. Es lo que permite tener diecinueve features sin
 que el menú sea una lista interminable.
 
 El costo de ese ahorro es real y se paga en dos lugares:
@@ -110,7 +112,7 @@ todo de un saque obligaría a volver a abrir el menú y navegar hasta acá de nu
 
 ## Perfiles de accesibilidad
 
-El resto del menú son quince controles, cada uno con su nombre técnico. Quien
+El resto del menú son diecisiete controles, cada uno con su nombre técnico. Quien
 sabe que necesita "interlineado 1.75 y saturación alta" los encuentra; quien
 solo sabe que ve poco, no. Un perfil traduce la necesidad a la combinación:
 
@@ -312,6 +314,45 @@ pausado tiene que seguir pausado.
 **Límite conocido:** un GIF animado no se pausa. Hacerlo exige decodificarlo y
 repintar el primer cuadro en un `<canvas>` que reemplace al `<img>`, y eso ya no
 es un cambio reversible sobre el DOM del sitio.
+
+---
+
+## Ocultar imágenes
+
+Saca de la vista las fotos, banners e ilustraciones y deja la página en texto.
+Reduce las distracciones para quien tiene déficit de atención, dificultades
+cognitivas o sensibilidad a estímulos, y simplifica las páginas muy cargadas.
+
+Se ocultan `<img>`, `<picture>`, `<input type="image">` y `<svg role="img">` con
+`opacity: 0`, **no** con `display: none` ni `visibility: hidden`: esas dos sacan
+la imagen del árbol de accesibilidad (su `alt` deja de llegar al lector de
+pantalla) y `display: none` además colapsa el hueco y desarma grillas y
+carruseles. Con la opacidad el layout queda intacto y apagar la feature no
+produce ningún salto.
+
+No se tocan las imágenes **dentro de un enlace o un botón** —ahí la imagen es el
+control, y esconderla deja un área clickeable invisible— ni los íconos.
+
+**Límite conocido:** las imágenes de fondo (`background-image`) quedan. Muchos
+sitios ponen texto claro sobre una foto de fondo, y sacarla dejaría ese texto
+blanco sobre blanco. Para limpiar también los fondos está el contraste Oscuro o
+Claro, que los reemplaza por un color sólido verificado.
+
+---
+
+## Resaltar enlaces
+
+Hace que los enlaces se distingan del texto común de un vistazo. Muchos sitios
+los marcan solo con color, y **WCAG 2.1 SC 1.4.1 "Use of Color"** pide que el
+color no sea la única pista.
+
+Se suman tres señales sobre `a[href]` y `[role="link"]`: subrayado grueso, fondo
+amarillo con texto casi negro (un par fijo, ~14:1, que se lee sobre cualquier
+fondo y con cualquier modo de contraste) y un contorno que delimita el área
+clickeable aunque el enlace envuelva una imagen o una tarjeta entera.
+
+En la hoja única va detrás de las dos secciones de contraste, así el destaque
+pedido explícitamente le gana a la paleta forzada.
 
 ---
 
@@ -1097,6 +1138,8 @@ src/
     smart-contrast/    Corrección medida por elemento + la matemática de WCAG.
     saturation/        Baja, alta y nula. Solo filtro.
     animations/        Pausa animaciones, transiciones y media (SC 2.2.2).
+    hide-images/       Oculta las imágenes de contenido (no las de fondo).
+    highlight-links/   Subrayado, fondo y contorno en los enlaces (SC 1.4.1).
     big-cursor/        Punteros grandes en SVG, host y shadow.
     font-size/         Pasos discretos + las dos estrategias de escalado.
     line-spacing/      Interlineado 1.5x / 1.75x / 2x.

@@ -11,7 +11,7 @@ import { PRESETS, PROFILE_IDS, type ProfileId } from './presets';
 /**
  * Perfiles de accesibilidad: la puerta de entrada del panel.
  *
- * El resto del menú son trece controles, cada uno con su nombre técnico. Quien
+ * El resto del menú son quince controles, cada uno con su nombre técnico. Quien
  * sabe que necesita "interlineado 1.75 y saturación alta" los encuentra; quien
  * solo sabe que ve poco, no. Un perfil traduce la necesidad a la combinación.
  *

@@ -95,6 +95,22 @@ export const ICON_ANIMATIONS = `
   <path d="M17 6v12M21 6v12"></path>
 </svg>`;
 
+/** Marco de foto con una montaña, tachado: ocultar imágenes. */
+export const ICON_HIDE_IMAGES = `
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+  <path d="M3 16l5-5 4 4 3-3 6 6"></path>
+  <path d="M3 3l18 18"></path>
+</svg>`;
+
+/** Dos eslabones de cadena con un subrayado: resaltar enlaces. */
+export const ICON_HIGHLIGHT_LINKS = `
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  <path d="M10 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"></path>
+  <path d="M14 9.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"></path>
+  <path d="M4 21h16"></path>
+</svg>`;
+
 /** Puntero de flecha con líneas de tamaño: cursor grande. */
 export const ICON_CURSOR = `
 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
